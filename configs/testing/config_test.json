@@ -1,0 +1,4 @@
+{
+    "database_uri": "sqlite:///testing.db",
+    "debug": false
+}

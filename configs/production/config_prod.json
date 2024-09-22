@@ -1,0 +1,4 @@
+{
+    "database_uri": "sqlite:///production.db",
+    "debug": false
+}
