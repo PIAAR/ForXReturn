@@ -1,0 +1,425 @@
+indicators:
+  ATR:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  ADX:
+    macro:
+      weight: 0.8
+      params:
+        period: 14
+    daily:
+      weight: 0.7
+      params:
+        period: 14
+    micro:
+      weight: 0.6
+      params:
+        period: 14
+  Aroon:
+    macro:
+      weight: 0.6
+      params:
+        period: 14
+    daily:
+      weight: 0.7
+      params:
+        period: 14
+    micro:
+      weight: 0.4
+      params:
+        period: 14
+  BollingerBands:
+    macro:
+      weight: 0.4
+      params:
+        period: 20
+        std: 2
+    daily:
+      weight: 0.7
+      params:
+        period: 20
+        std: 2
+    micro:
+      weight: 0.9
+      params:
+        period: 20
+        std: 2
+  CCI:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  ChaikinMoneyFlow:
+    macro:
+      weight: 0.6
+      params:
+        period: 14
+    daily:
+      weight: 0.7
+      params:
+        period: 14
+    micro:
+      weight: 0.8
+      params:
+        period: 14
+  ChandeMomentumOscillator:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  CoppockCurve:
+    macro:
+      weight: 0.6
+      params:
+        period: 14
+    daily:
+      weight: 0.7
+      params:
+        period: 14
+    micro:
+      weight: 0.8
+      params:
+        period: 14
+  DonchianChannel:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  EMA:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  IchimokuCloud:
+    macro:
+      weight: 0.6
+      params:
+        period: 14
+    daily:
+      weight: 0.7
+      params:
+        period: 14
+    micro:
+      weight: 0.8
+      params:
+        period: 14
+  KeltnerChannel:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  MACD:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+        fast: 12
+        slow: 26
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+        fast: 12
+        slow: 26
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+        fast: 12
+        slow: 26
+  MFI:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  OBV:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  RSI:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  ROC:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  SMA:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  StochasticOscillator:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+        fast: 12
+        slow: 26
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+        fast: 12
+        slow: 26
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+        fast: 12
+        slow: 26
+  TRIX:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  VWAP:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  WilliamsR:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  WMA:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  ZLEMA:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  VWMA:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  TEMA:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+  Supertrend:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+        multiplier: 3
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+        multiplier: 3
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+        multiplier: 3
+  StochRSI:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+        fast: 12
+        slow: 26
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+        fast: 12
+        slow: 26
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+        fast: 12
+        slow: 26
+  PPO:
+    macro:
+      weight: 0.7
+      params:
+        period: 14
+        fast: 12
+        slow: 26
+    daily:
+      weight: 0.8
+      params:
+        period: 14
+        fast: 12
+        slow: 26
+    micro:
+      weight: 0.9
+      params:
+        period: 14
+        fast: 12
+        slow: 26
+  PSAR:
+    macro:
+      weight: 0.7
+      params:
+        step: 0.02
+        max: 0.2
+    daily:
+      weight: 0.8
+      params:
+        step: 0.02
+        max: 0.2
+    micro:
+      weight: 0.9
+      params:
+        step: 0.02
+        max: 0.2
+        
