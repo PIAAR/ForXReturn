@@ -308,9 +308,11 @@ class MongoDBHandler:
             self.create_collection_with_index(collection_name, index_field="time")
             self.switch_collection(collection_name)  # Ensure collection is set
 
+            print(f"Collection set to: {self.collection.name}")  # Debugging
 
             # Fetch historical data from OANDA
             data = self.oanda_client.fetch_historical_data(instrument, granularity, count)
+            print(f"Fetched data: {data}")  # Debugging
 
             # Check if data is returned and proceed
             if not data:
@@ -322,6 +324,7 @@ class MongoDBHandler:
                 raise ValueError(f"MongoDB collection for {collection_name} is not set.")
 
             if new_data := list(data):
+                print(f"New data to insert: {new_data}")  # Debugging
                 self.short_bulk_insert(new_data)
                 logger.info(f"Inserted {len(new_data)} new data points for {instrument} in {granularity} timeframe.")
             else:

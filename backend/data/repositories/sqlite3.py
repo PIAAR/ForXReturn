@@ -86,7 +86,7 @@ class SQLiteDB:
         finally:
             self.close_connection()
 
-    def get_indicator_parameters(self, indicator_id):
+    def add_indicator_parameters(self, indicator_id):
         """
         Retrieve parameters for a given indicator.
         """

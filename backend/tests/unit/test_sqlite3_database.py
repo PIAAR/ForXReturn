@@ -53,14 +53,14 @@ class TestSQLiteDatabase(unittest.TestCase):
     def test_add_indicator_parameters(self):
         """Test adding parameters to an indicator."""
         self.db.add_indicator_parameters(1, {"period": 14, "multiplier": 1.5})
-        params = self.db.get_indicator_parameters(1)
+        params = self.db.add_indicator_parameters(1)
         self.assertEqual(params["period"], 14)
         self.assertEqual(params["multiplier"], 1.5)
 
     def test_update_indicator_parameters(self):
         """Test updating an indicator parameter."""
         self.db.update_indicator_parameters(1, {"period": 20, "multiplier": 2.0})
-        params = self.db.get_indicator_parameters(1)
+        params = self.db.add_indicator_parameters(1)
         self.assertEqual(params["period"], 20)
         self.assertEqual(params["multiplier"], 2.0)
 
@@ -68,7 +68,7 @@ class TestSQLiteDatabase(unittest.TestCase):
         """Test adding parameters for Bollinger Bands indicator."""
         self.db.add_indicator("Bollinger Bands", "volatility")
         self.db.add_indicator_parameters(2, {"period": 20, "upper_band": 2.0, "lower_band": -2.0})
-        params = self.db.get_indicator_parameters(2)
+        params = self.db.add_indicator_parameters(2)
         self.assertEqual(params["period"], 20)
         self.assertEqual(params["upper_band"], 2.0)
         self.assertEqual(params["lower_band"], -2.0)

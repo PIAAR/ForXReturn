@@ -27,7 +27,7 @@ class IndicatorsController:
         self.state_machine = StateMachine(self.config_loader)
         
         # Initialize the SQLite database
-        schema_path = '/Users/black_mac/Documents/GitHub/Forex/AI-ForXBot/backend/data/repositories/schema.sql'
+        schema_path = '/Users/black_mac/Documents/GitHub/Forex/ForXReturn/backend/data/repositories/schema.sql'
         if not os.path.isfile(schema_path):
             raise FileNotFoundError(f"Schema file not found: {schema_path}")
         
