@@ -3,4 +3,5 @@ CREATE TABLE IF NOT EXISTS instruments (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE,
     opening_time TIME NOT NULL,
-    closing_time TIME N
+    closing_time TIME NOT NULL
+);
