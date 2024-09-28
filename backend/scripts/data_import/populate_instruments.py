@@ -18,10 +18,9 @@ def compare_and_insert_instruments(db, instruments):
     If the instrument exists, skip or update it. Otherwise, insert a new record.
     """
     for instrument in instruments:
-        # Check if the instrument already exists in the database
-        existing_record = db.fetch_records("instruments", {"name": instrument['name']})
-
-        if existing_record:
+        if existing_record := db.fetch_records(
+            "instruments", {"name": instrument['name']}
+        ):
             # Get the existing opening and closing times from the database
             existing_opening_time = existing_record[0][2]
             existing_closing_time = existing_record[0][3]
