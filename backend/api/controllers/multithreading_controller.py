@@ -1,8 +1,11 @@
 # backend/api/controllers/multithreading_controller.py
-import concurrent.futures
+
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
+from api.services.trading_services import TradingService
+from api.services.data_population_service import DataPopulationService
 from trading.optimizers.backtester import Backtester
 from trading.optimizers.optimizer import Optimizer
-from api.services.data_population_service import DataPopulationService
 from api.services.state_machine import StateMachine
 from logs.log_manager import LogManager
 
@@ -15,45 +18,81 @@ class MultithreadingController:
         Initializes the multithreading controller with a thread pool.
         :param max_workers: Maximum number of worker threads to run concurrently.
         """
-        self.executor = concurrent.futures.ThreadPoolExecutor(max_workers=max_workers)
-        self.backtester = Backtester()
-        self.optimizer = Optimizer(self.backtester)
-        self.state_machine = StateMachine()
+        self.executor = ThreadPoolExecutor(max_workers=max_workers)
+        self.lock = Lock()  # For thread-safe access to shared resources
+        
+        # Initialize services and other components
+        self.trading_service = TradingService()
         self.data_population_service = DataPopulationService()
+        self.backtester = Backtester()
+        self.optimizer = Optimizer()
+        self.state_machine = StateMachine()
 
-    def run_parallel_optimization(self, param_sets):
+        # Keep track of running futures
+        self.futures = []
+
+    def _run_task(self, task, *args, **kwargs):
         """
-        Run multiple parameter optimizations in parallel using ThreadPoolExecutor.
+        Wrapper to run a task within a thread and log errors.
         """
-        logger.info("Running parallel optimization")
-        futures = [self.executor.submit(self.optimizer.optimize_parameters, "EUR_USD", param_set) for param_set in param_sets]
-        results = [f.result() for f in concurrent.futures.as_completed(futures)]
-        return results
+        try:
+            task_name = task.__name__
+            logger.info(f"Starting task: {task_name}")
+            result = task(*args, **kwargs)
+            logger.info(f"Task {task_name} completed with result: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"Error in task {task.__name__}: {e}")
+            return None
 
     def run_backtest(self, strategy_name, instrument, timeframe):
         """
         Schedules a backtest to run in a separate thread.
+        :param strategy_name: Name of the trading strategy.
+        :param instrument: Forex instrument (e.g., 'EUR_USD').
+        :param timeframe: Timeframe to run the backtest on.
         """
-        logger.info(f"Running backtest for {strategy_name} on {instrument}")
-        future = self.executor.submit(self.backtester.run, strategy_name, instrument, timeframe)
-        return future.result()
+        future = self.executor.submit(self._run_task, self.backtester.run, strategy_name, instrument, timeframe)
+        self.futures.append(future)
+
+    def run_optimizer(self, instrument, parameters):
+        """
+        Schedules an optimization task to run in a separate thread.
+        :param instrument: The instrument being optimized.
+        :param parameters: Optimization parameters.
+        """
+        future = self.executor.submit(self._run_task, self.optimizer.optimize, instrument, parameters)
+        self.futures.append(future)
 
     def update_historical_data(self):
         """
         Schedules a data population task to run in a separate thread.
         """
-        logger.info("Updating historical data")
-        future = self.executor.submit(self.data_population_service.populate_all_instruments)
-        return future.result()
+        future = self.executor.submit(self._run_task, self.data_population_service.populate_all_instruments)
+        self.futures.append(future)
 
     def run_state_machine(self, data):
         """
         Schedules the state machine to process the provided data in a separate thread.
         """
-        logger.info("Running state machine")
-        future = self.executor.submit(self.state_machine.run_state_machine, data)
-        return future.result()
+        future = self.executor.submit(self._run_task, self.state_machine.run_state_machine, data)
+        self.futures.append(future)
 
+    def monitor_tasks(self):
+        """
+        Monitor the progress of the tasks and handle completion of futures.
+        """
+        logger.info("Monitoring tasks...")
+        for future in as_completed(self.futures):
+            try:
+                result = future.result()
+                logger.info(f"Task completed with result: {result}")
+            except Exception as e:
+                logger.error(f"Error during task execution: {e}")
+        
+        # Clean up finished tasks
+        self.futures = [f for f in self.futures if not f.done()]
+    
     def shutdown(self):
         """
         Shuts down the thread pool executor, allowing all running tasks to complete.
@@ -61,22 +100,17 @@ class MultithreadingController:
         logger.info("Shutting down the multithreading controller...")
         self.executor.shutdown(wait=True)
 
-
-# Example usage
+# Example usage of the multithreading controller
 if __name__ == "__main__":
     controller = MultithreadingController(max_workers=10)
-
-    # Run parallel optimization
-    param_sets = [{'period': 10}, {'period': 20}, {'period': 30}]
-    optimization_results = controller.run_parallel_optimization(param_sets)
-    print(f"Optimization Results: {optimization_results}")
-
-    # Run a backtest
-    backtest_result = controller.run_backtest('RSI', 'EUR_USD', '1H')
-    print(f"Backtest Result: {backtest_result}")
-
-    # Update historical data
+    
+    # Schedule various tasks
+    controller.run_backtest('RSI', 'EUR_USD', '1H')
+    controller.run_optimizer('EUR_USD', {'ATR': 14, 'EMA': 200})
     controller.update_historical_data()
+
+    # Monitor and wait for tasks to complete
+    controller.monitor_tasks()
 
     # Shutdown when done
     controller.shutdown()
