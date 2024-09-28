@@ -59,8 +59,7 @@ def place_order():
     Places a new trade order.
     """
     trade_data = request.json
-    response = trading_service.place_trade(trade_data)
-    if response:
+    if response := trading_service.place_trade(trade_data):
         return jsonify(response), 201
     return jsonify({'error': 'Failed to place order'}), 500
 
