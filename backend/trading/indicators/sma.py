@@ -1,6 +1,6 @@
 # backend/trading/indicators/sma.py
 from logs.log_manager import LogManager
-from data.repositories.sqlite3 import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDB
 from datetime import datetime
 
 # Configure loggers
@@ -35,7 +35,8 @@ class SMA:
             return df
 
         # Calculate the SMA and assign it to a new column
-        df[f'sma_{period}'] = df['close'].rolling(window=period).mean()
+        df['sma'] = df['close'].rolling(window=period).mean()
+        df['period'] = period  # Store the period in a separate column
 
         logger.info(f"SMA calculation for period {period} completed.")
         return df
@@ -52,7 +53,7 @@ class SMA:
         indicator_id = self.db_handler.get_indicator_id(indicator_name)
         timestamp = datetime.now().isoformat()
 
-        param_name = f'sma_{period}'
+        param_name = indicator_name.lower()
         # Insert SMA results row by row
         for _, row in result_df.iterrows():
             param_value = row[param_name]

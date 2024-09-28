@@ -1,6 +1,6 @@
 # backend/trading/indicators/williams_r.py
 from logs.log_manager import LogManager
-from data.repositories.sqlite3 import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDB
 from datetime import datetime
 
 # Configure loggers

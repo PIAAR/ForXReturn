@@ -73,7 +73,7 @@ class TestOptimizerBacktest(unittest.TestCase):
 
         # Check if the parameters in the database were updated
         self.cursor.execute("SELECT value FROM indicator_parameters WHERE key='SMA'")
-        updated_value = self.cursor.fetchone()[0]
+        updated_value = self.cursor.fetchone()
         self.assertNotEqual(updated_value, '20')  # Ensure the value was changed by the optimizer
 
 if __name__ == '__main__':

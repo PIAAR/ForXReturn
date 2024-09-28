@@ -1,7 +1,7 @@
 # backend/trading/indicators/bollinger.py
 import pandas as pd
 from logs.log_manager import LogManager
-from data.repositories.sqlite3 import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDB
 from datetime import datetime
 
 # Configure loggers

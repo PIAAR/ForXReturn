@@ -1,6 +1,5 @@
-# backend/trading/indicators/ema.py
 from logs.log_manager import LogManager
-from data.repositories.sqlite3 import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDB
 from datetime import datetime
 
 # Configure loggers
@@ -34,9 +33,10 @@ class EMA:
             logger.warning("Insufficient data for EMA calculation.")
             return df
 
-        # Calculate the EMA
+        # Calculate the EMA and assign it to a dynamically named column
         df['ema'] = df['close'].ewm(span=period, adjust=False).mean()
-
+        df['period'] = period  # Store the period in a separate column  
+        
         logger.info(f"EMA calculation for period={period} completed.")
         return df
 
@@ -52,10 +52,10 @@ class EMA:
         indicator_id = self.db_handler.get_indicator_id(indicator_name)
         timestamp = datetime.now().isoformat()
 
-        param_name = 'ema'
+        param_name = indicator_name.lower()
         # Insert EMA results row by row
         for _, row in result_df.iterrows():
-            param_value = row['ema']
+            param_value = row[param_name]
             self.db_handler.add_indicator_results(indicator_id, timestamp, param_name, param_value)
             self.db_handler.add_indicator_parameters(indicator_id, {'period': period})
 

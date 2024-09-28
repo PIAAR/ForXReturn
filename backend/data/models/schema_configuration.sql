@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS profiles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    profile_name TEXT NOT NULL,
+    last_update TEXT NOT NULL
+);

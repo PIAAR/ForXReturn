@@ -1,13 +1,16 @@
 import os
 import sys
-from data.repositories.sqlite3 import initialize_db
+
 from logs.log_manager import LogManager  # Import the LogManager class
+
+from backend.data.repositories._sqlite_db import initialize_db
 
 # Configure logging
 logger = LogManager('database_setup').get_logger()
 
 import os
 import sqlite3
+
 
 def connect_db(db_name=None):
     """Establish a connection to the SQLite database."""

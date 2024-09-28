@@ -34,10 +34,7 @@ class StateMachine:
         :param threshold: Threshold above which the state is considered Green.
         :return: 'Green' if score exceeds the threshold, otherwise 'Red'.
         """
-        if weighted_score >= threshold:
-            return 'Green'
-        else:
-            return 'Red'
+        return 'Green' if weighted_score >= threshold else 'Red'
 
     def run_state_machine(self, indicator_results_by_tier):
         """

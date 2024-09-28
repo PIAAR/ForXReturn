@@ -1,3 +1,4 @@
 
-/backend/logs/logs
 /backend/config/secrets
+*.pyc
+*.log

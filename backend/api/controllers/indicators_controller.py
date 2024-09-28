@@ -1,6 +1,6 @@
 import os
 import importlib
-from data.repositories.sqlite3 import SQLiteDB
+from data.repositories._sqlite_db import SQLiteDB
 from datetime import datetime
 from data.repositories.mongo import MongoDBHandler
 from logs.log_manager import LogManager
@@ -27,7 +27,7 @@ class IndicatorsController:
         self.state_machine = StateMachine(self.config_loader)
         
         # Initialize the SQLite database
-        schema_path = '/Users/black_mac/Documents/GitHub/Forex/ForXReturn/backend/data/repositories/schema.sql'
+        schema_path = '/Users/black_mac/Documents/GitHub/Forex/ForXReturn/backend/data/models'
         if not os.path.isfile(schema_path):
             raise FileNotFoundError(f"Schema file not found: {schema_path}")
         

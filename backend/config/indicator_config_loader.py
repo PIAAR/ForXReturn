@@ -2,7 +2,7 @@ import yaml
 import os
 
 class IndicatorConfigLoader:
-    def __init__(self, config_path='../trading/indicators/indicator_params.yml'):
+    def __init__(self, config_path='../scripts/yml/indicator_params.yml'):
         if not os.path.isfile(config_path):
             raise FileNotFoundError(f"YAML config file not found: {config_path}")
         self.config_path = config_path
