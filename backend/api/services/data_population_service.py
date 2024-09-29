@@ -67,6 +67,7 @@ class DataPopulationService:
         """
         Populate historical data for all major forex instruments and multiple granularities.
         """
+        print("Populating all instruments with historical data.")
         try:
             # List of major forex pairs and granularities to fetch
             major_pairs = ["EUR_USD", "GBP_USD", "USD_JPY", "AUD_USD", "USD_CHF", "USD_CAD"]
@@ -75,7 +76,7 @@ class DataPopulationService:
             # Fetch and store data for each pair and granularity
             for pair, granularity in itertools.product(major_pairs, granularities):
                 self.mongo_handler.populate_historical_data(pair, granularity)
-        
+            
         except Exception as e:
             # Log error in case of failure in populating data for all instruments
             self.logger.error(f"Error populating all instruments: {e}")

@@ -3,6 +3,7 @@ from flask import Blueprint, Flask, jsonify, request
 from logs.log_manager import LogManager
 from api.services.trading_services import TradingService
 from api.services.data_population_service import DataPopulationService
+from data.repositories._sqlite_db import SQLiteDB
 
 '''
 Creates the Flask app and registers the blueprints. Defines the API routes.
@@ -16,8 +17,11 @@ main = Blueprint('main', __name__)
 trading_bp = Blueprint('trading', __name__)
 data_population_bp = Blueprint('data_population', __name__)
 
-# Initialize services
-trading_service = TradingService()
+# Create a database connection for indicators.db
+db_connection = SQLiteDB("indicators.db")._connect_db()
+
+# Initialize services with db_connection
+trading_service = TradingService(db_connection)
 data_population_service = DataPopulationService()
 
 # -------------------- Main Blueprint --------------------
@@ -32,44 +36,53 @@ def main_route():
 @trading_bp.route('/start', methods=['POST'])
 def start_trading():
     """
-    Starts the trading process.
+    Starts the trading process by calling the `start_trading` method of the trading service.
     """
-    trading_service.start_trading()
-    return jsonify({'status': 'Trading started'}), 200
+    try:
+        trading_service.start_trading()
+        return jsonify({'status': 'Trading started'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @trading_bp.route('/stop', methods=['POST'])
 def stop_trading():
     """
-    Stops the trading process.
+    Stops the trading process by calling the `stop_trading` method of the trading service.
     """
-    trading_service.stop_trading()
-    return jsonify({'status': 'Trading stopped'}), 200
+    try:
+        trading_service.stop_trading()
+        return jsonify({'status': 'Trading stopped'}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @trading_bp.route('/status', methods=['GET'])
 def get_status():
     """
-    Retrieves the current status of trading.
+    Retrieves the current status of the trading process.
     """
-    status = trading_service.get_status()
-    return jsonify(status), 200
+    try:
+        status = trading_service.get_status()
+        open_orders = trading_service.get_orders()
+        positions = trading_service.get_positions()
+        return jsonify({
+                        'status': status,
+                        'open_orders': open_orders,
+                        'positions': positions
+                        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-@trading_bp.route('/order', methods=['POST'])
+@trading_bp.route('/place_order', methods=['POST'])
 def place_order():
     """
-    Places a new trade order.
+    Places a new order by calling the `place_order` method in the TradingService.
     """
-    trade_data = request.json
-    if response := trading_service.place_trade(trade_data):
-        return jsonify(response), 201
-    return jsonify({'error': 'Failed to place order'}), 500
-
-@trading_bp.route('/orders', methods=['GET'])
-def get_orders():
-    """
-    Retrieves open orders.
-    """
-    orders = trading_service.get_orders()
-    return jsonify(orders), 200
+    try:
+        order_data = request.json
+        order_response = trading_service.place_order(order_data)
+        return jsonify(order_response), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @trading_bp.route('/positions', methods=['GET'])
 def get_positions():
@@ -84,8 +97,17 @@ def performance():
     """
     Retrieves trading performance metrics.
     """
-    performance_data = trading_service.get_performance()
-    return jsonify(performance_data), 200
+    
+    # Create a database connection
+    db_connection = SQLiteDB("indicators.db")._connect_db()
+    # Initialize TradingService with db_connection
+    trading_service = TradingService(db_connection)
+
+    try:
+        performance_data = trading_service.get_performance()  # This method should use db_connection
+        return jsonify(performance_data), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # -------------------- Data Population Routes --------------------
 @data_population_bp.route('/populate_data', methods=['POST'])

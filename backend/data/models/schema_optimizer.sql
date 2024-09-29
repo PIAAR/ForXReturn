@@ -14,10 +14,14 @@ CREATE TABLE IF NOT EXISTS optimized_parameters (
 CREATE TABLE IF NOT EXISTS optimization_results (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     optimization_id INTEGER NOT NULL,  -- Foreign key to the optimized_parameters table
+    instrument_id INTEGER NOT NULL,    -- Foreign key to the instruments table (for easier lookup)
     sharpe_ratio REAL,                 -- Sharpe ratio of the optimized strategy
     total_return REAL,                 -- Total return percentage
     max_drawdown REAL,                 -- Maximum drawdown observed
     win_rate REAL,                     -- Win rate percentage
+    profit_loss REAL,                  -- Profit or loss value
+    total_trades INTEGER,              -- Total number of trades taken in this optimization
     timestamp TEXT NOT NULL,           -- Timestamp of when the result was recorded
-    FOREIGN KEY(optimization_id) REFERENCES optimized_parameters(id) ON DELETE CASCADE
+    FOREIGN KEY(optimization_id) REFERENCES optimized_parameters(id) ON DELETE CASCADE,
+    FOREIGN KEY(instrument_id) REFERENCES instruments(id) ON DELETE CASCADE
 );
