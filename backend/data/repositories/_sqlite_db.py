@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from backend.logs.log_manager import LogManager  # Import the LogManager class
+from logs.log_manager import LogManager  # Import the LogManager class
 
 # Configure logging
 logger = LogManager('sqlite_db_logs').get_logger()
@@ -62,6 +62,10 @@ class SQLiteDB:
             return schema_sql
 
     def execute_script(self, schema_sql):
+        if not schema_sql or not isinstance(schema_sql, str):
+            logger.error("Invalid SQL script provided.")
+            return
+    
         try:
             self._connect_db()
             cursor = self.conn.cursor()
@@ -71,6 +75,7 @@ class SQLiteDB:
         except Exception as e:
             logger.error(f"Error executing schema script: {e}")
         finally:
+            logger.info(f"Closing the connection for self: {self}")  # Check what `self` is here
             self.close_connection()
 
     def initialize_db(self):
@@ -79,6 +84,26 @@ class SQLiteDB:
         """
         if schema_sql := self.load_schema():
             self.execute_script(schema_sql)
+
+    def get_instrument_id(self, instrument_name):
+        """
+        Retrieve the instrument_id for the given instrument name.
+        If the instrument doesn't exist, it will be inserted.
+        """
+        query = "SELECT id FROM instruments WHERE name = ?"
+        
+        # Execute the query to find the instrument_id by name
+        self._connect_db()
+        cursor = self.conn.cursor()
+        cursor.execute(query, (instrument_name,))
+        result = cursor.fetchone()
+        
+        # If no result, insert the instrument
+        if not result:
+            instrument_id = self.add_record_to_the_database({"name": instrument_name}, "instruments")
+            logger.info(f"Inserted new instrument: {instrument_name} with ID {instrument_id}")
+            return instrument_id
+        return result[0]  # Return the existing instrument_id
 
     def add_record(self, table_name, data):
         """
@@ -107,30 +132,6 @@ class SQLiteDB:
         logger.info(f"Record added to {table_name}")
         return cursor.lastrowid
 
-    def update_record(self, table_name, data, where_clause):
-        """
-        Update records dynamically in the specified table.
-        :param table_name: The name of the table.
-        :param data: A dictionary of column names and values to be updated.
-        :param where_clause: A dictionary for the WHERE clause to specify which records to update.
-        """
-        try:
-            self._connect_db()
-            cursor = self.conn.cursor()
-
-            set_clause = ', '.join([f"{key} = ?" for key in data])
-            where_conditions = ' AND '.join([f"{key} = ?" for key in where_clause])
-            query = f"UPDATE {table_name} SET {set_clause} WHERE {where_conditions}"
-
-            cursor.execute(query, list(data.values()) + list(where_clause.values()))
-            self.conn.commit()
-
-            logger.info(f"Record(s) updated in {table_name}")
-        except Exception as e:
-            logger.error(f"Error updating record in {table_name}: {e}")
-        finally:
-            self.close_connection()
-
     def fetch_records(self, table_name, where_clause=None):
         """
         Retrieve records dynamically from the specified table.
@@ -151,93 +152,40 @@ class SQLiteDB:
         cursor = self.conn.cursor()
 
         query = f"SELECT * FROM {table_name}"
+        parameters = []
         if where_clause:
             where_conditions = ' AND '.join([f"{key} = ?" for key in where_clause])
             query += f" WHERE {where_conditions}"
-            cursor.execute(query, list(where_clause.values()))
-        else:
-            cursor.execute(query)
+            parameters = list(where_clause.values())
+            
+        cursor.execute(query, parameters)
+        # print(f"Executing query: {query}")  # Debugging line
+        # print(f"With parameters: {parameters}")  # Debugging line
 
         results = cursor.fetchall()
-        logger.info(f"Fetched records from {table_name}")
+        # Convert the sqlite3.Row objects into dictionaries for easy access
+        # records = [dict(row) for row in results]
+
+        logger.info(f"Fetched {len(results)} records from {table_name}")
         return results
 
-    def delete_records(self, table_name, where_clause):
+    def update_record(self, table_name, data, where_clause):
         """
-        Delete records dynamically from the specified table.
+        Update records dynamically in the specified table.
         :param table_name: The name of the table.
-        :param where_clause: A dictionary for the WHERE clause to specify which records to delete.
+        :param data: A dictionary of column names and values to be updated.
+        :param where_clause: A dictionary for the WHERE clause to specify which records to update.
         """
         try:
             self._connect_db()
             cursor = self.conn.cursor()
 
+            set_clause = ', '.join([f"{key} = ?" for key in data])
             where_conditions = ' AND '.join([f"{key} = ?" for key in where_clause])
-            query = f"DELETE FROM {table_name} WHERE {where_conditions}"
-            cursor.execute(query, list(where_clause.values()))
+            query = f"UPDATE {table_name} SET {set_clause} WHERE {where_conditions}"
+
+            cursor.execute(query, list(data.values()) + list(where_clause.values()))
             self.conn.commit()
 
-            logger.info(f"Record(s) deleted from {table_name}")
-        except Exception as e:
-            logger.error(f"Error deleting record(s) from {table_name}: {e}")
-        finally:
-            self.close_connection()
-
-if __name__ == "__main__":
-    # Connect to indicators.db and perform operations
-    indicators_db = SQLiteDB("indicators.db")
-    indicators_db.initialize_db()  # Initialize the database if needed
-    # Insert a record into the indicators table
-    # Example: Add the RSI indicator
-    indicators_db.add_record("indicators", {"name": "RSI", "type": "momentum"})
-    # ===========================================================================================================#
-
-    # Connect to the instruments table and perform operations
-    instruments_db = SQLiteDB("instruments.db")
-    instruments_db.initialize_db()  # Initialize the database if needed
-    # Insert a record into the instruments table
-    # Example: Add the EUR_USD instrument with opening and closing dates
-    instruments_db.add_record("instruments", {"name": "EUR_USD", "opening_time": "00:00:00", "closing_time": "23:59:59"})
-    # ===========================================================================================================#
-
-    # Connect to configuration.db and perform operations
-    config_db = SQLiteDB("configuration.db")
-    config_db.initialize_db()  # Initialize the database if needed
-    # Insert a profile record into the profiles table
-    config_db.add_record("profiles", {"profile_name": "Default", "last_update": "2024-01-01"})
-    # ===========================================================================================================#
-    
-    # Connect to optimizer.db and perform operations
-    optimizer_db = SQLiteDB("optimizer.db")
-    optimizer_db.initialize_db()  # Initialize the database if needed
-
-    if instrument_records := instruments_db.fetch_records(
-        "instruments", {"name": "EUR_USD"}
-    ):
-        instrument_id = instrument_records[0][0]
-        print(f"Instrument ID for EUR_USD: {instrument_id}")
-    else:
-        print("Error: EUR_USD not found in the instruments table.")
-        exit(1)  # or handle this case as needed
-
-    if indicator_records := indicators_db.fetch_records(
-        "indicators", {"name": "RSI"}
-    ):
-        indicator_id = indicator_records[0][0]
-        print(f"Indicator ID for RSI: {indicator_id}")
-    else:
-        print("Error: RSI not found in the indicators table.")
-        exit(1)  # or handle this case as needed
-
-    # Insert optimized parameters for the RSI indicator on EUR_USD
-    optimizer_db.add_record("optimized_parameters", {"instrument_id": instrument_id, "indicator_id": indicator_id, "parameter_name": "ATR", "parameter_value": 0.02, "timestamp": "2023-09-25 12:00:00"})
-
-    # Insert optimization performance results (assuming the optimization ID is known)
-    optimizer_db.add_record("optimization_results", {"optimization_id": 1, "sharpe_ratio": 1.5, "total_return": 25.3, "max_drawdown": -5.6, "win_rate": 60, "timestamp": "2023-09-25 12:30:00"})
-    # ===========================================================================================================#
-    # Connect to user.db and perform operations
-    user_db = SQLiteDB("user.db")
-    user_db.initialize_db()  # Initialize the database if needed
-
-    # Insert a session record into the session table
-    user_db.add_record("session", {"user_id": 1, "session_token": "abc123"})
+            logger.info(f"Record(s) updated in {table_name}")
+        except Except

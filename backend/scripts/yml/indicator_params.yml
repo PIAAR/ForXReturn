@@ -1,425 +1,364 @@
 indicators:
   ATR:
+    type: "volatility"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   ADX:
+    type: "trend"
     macro:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.6
-      params:
-        period: 14
+      period: 14
   Aroon:
+    type: "trend"
     macro:
       weight: 0.6
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.4
-      params:
-        period: 14
+      period: 14
   BollingerBands:
+    type: "volatility"
     macro:
       weight: 0.4
-      params:
-        period: 20
-        std: 2
+      period: 20
+      std: 2
     daily:
       weight: 0.7
-      params:
-        period: 20
-        std: 2
+      period: 20
+      std: 2
     micro:
       weight: 0.9
-      params:
-        period: 20
-        std: 2
+      period: 20
+      std: 2
   CCI:
+    type: "momentum"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   ChaikinMoneyFlow:
+    type: "momentum"
     macro:
       weight: 0.6
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
   ChandeMomentumOscillator:
+    type: "momentum"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   CoppockCurve:
+    type: "trend"
     macro:
       weight: 0.6
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
   DonchianChannel:
+    type: "trend"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   EMA:
+    type: "trend"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   IchimokuCloud:
+    type: "trend"
     macro:
       weight: 0.6
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
   KeltnerChannel:
+    type: "volatility"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   MACD:
+    type: "momentum"
     macro:
       weight: 0.7
-      params:
-        period: 14
-        fast: 12
-        slow: 26
+      fast: 12
+      slow: 26
+      signal: 9
     daily:
       weight: 0.8
-      params:
-        period: 14
-        fast: 12
-        slow: 26
+      fast: 12
+      slow: 26
+      signal: 9
     micro:
       weight: 0.9
-      params:
-        period: 14
-        fast: 12
-        slow: 26
+      fast: 12
+      slow: 26
+      signal: 9
   MFI:
+    type: "momentum"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   OBV:
+    type: "momentum"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   RSI:
+    type: "momentum"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   ROC:
+    type: "momentum"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   SMA:
+    type: "trend"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   StochasticOscillator:
+    type: "momentum"
     macro:
       weight: 0.7
-      params:
-        period: 14
-        fast: 12
-        slow: 26
+      period: 14
+      fast: 12
+      slow: 26
     daily:
       weight: 0.8
-      params:
-        period: 14
-        fast: 12
-        slow: 26
+      period: 14
+      fast: 12
+      slow: 26
     micro:
       weight: 0.9
-      params:
-        period: 14
-        fast: 12
-        slow: 26
+      period: 14
+      fast: 12
+      slow: 26
   TRIX:
+    type: "trend"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   VWAP:
+    type: "volume"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   WilliamsR:
+    type: "momentum"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   WMA:
+    type: "trend"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   ZLEMA:
+    type: "trend"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   VWMA:
+    type: "volume"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   TEMA:
+    type: "trend"
     macro:
       weight: 0.7
-      params:
-        period: 14
+      period: 14
     daily:
       weight: 0.8
-      params:
-        period: 14
+      period: 14
     micro:
       weight: 0.9
-      params:
-        period: 14
+      period: 14
   Supertrend:
+    type: "trend"
     macro:
       weight: 0.7
-      params:
-        period: 14
-        multiplier: 3
+      period: 14
+      multiplier: 3
     daily:
       weight: 0.8
-      params:
-        period: 14
-        multiplier: 3
+      period: 14
+      multiplier: 3
     micro:
       weight: 0.9
-      params:
-        period: 14
-        multiplier: 3
+      period: 14
+      multiplier: 3
   StochRSI:
+    type: "momentum"
     macro:
       weight: 0.7
-      params:
-        period: 14
-        fast: 12
-        slow: 26
+      period: 14
+      fast: 12
+      slow: 26
     daily:
       weight: 0.8
-      params:
-        period: 14
-        fast: 12
-        slow: 26
+      period: 14
+      fast: 12
+      slow: 26
     micro:
       weight: 0.9
-      params:
-        period: 14
-        fast: 12
-        slow: 26
+      period: 14
+      fast: 12
+      slow: 26
   PPO:
+    type: "momentum"
     macro:
       weight: 0.7
-      params:
-        period: 14
-        fast: 12
-        slow: 26
+      fast: 12
+      slow: 26
+      signal: 9
     daily:
       weight: 0.8
-      params:
-        period: 14
-        fast: 12
-        slow: 26
+      fast: 12
+      slow: 26
+      signal: 9
     micro:
       weight: 0.9
-      params:
-        period: 14
-        fast: 12
-        slow: 26
+      fast: 12
+      slow: 26
+      signal: 9
   PSAR:
+    type: "trend"
     macro:
       weight: 0.7
-      params:
-        step: 0.02
-        max: 0.2
+      step: 0.02
+      max: 0.2
     daily:
       weight: 0.8
-      params:
-        step: 0.02
-        max: 0.2
+      step: 0.02
+      max: 0.2
     micro:
       weight: 0.9
-      params:
-        step: 0.02
-        max: 0.2
-        
+      step: 0.02
+      max: 0.2

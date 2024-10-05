@@ -1,4 +1,5 @@
-from trading.brokers.oanda_client import OandaAPI
+from trading.brokers.oanda_client import OandaClient
+import pandas as pd
 from backend.trading.indicators.macd import MACD
 from backend.trading.indicators.rsi import RSI
 from backend.api.services.state_machine import StateMachine
@@ -71,6 +72,6 @@ class TradeMachine:
 
 # Example usage
 if __name__ == "__main__":
-    oanda = OandaAPI()
+    oanda = OandaClient()
     trade_machine = TradeMachine(oanda)
     trade_machine.run()

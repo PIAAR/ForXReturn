@@ -335,3 +335,23 @@ class MongoDBHandler:
             logger.error(f"Error populating data for {instrument}: {e}")
             raise
 
+    def populate_sqlite_from_mongo(self, sqlite_db, collection_name, instrument, granularity):
+        """
+        Populate data from MongoDB to SQLite for backtesting.
+        :param sqlite_db: The SQLite database object to insert data into.
+        :param collection_name: The name of the MongoDB collection to fetch data from.
+        :param instrument: The forex pair (e.g., 'EUR_USD').
+        :param granularity: The timeframe (e.g., 'D', 'M1', 'H1').
+        """
+        data = self.read({}, collection_name=collection_name)  # Fetch all data from MongoDB
+
+        instrument_id = sqlite_db.get_instrument_id(instrument)  # Get or insert instrument ID
+
+        for record in data:
+            # Extract the mid (open, high, low, close) values from MongoDB document
+            mid = record.get('mid', {})
+            open_price = float(mid.get('o', 0))
+            high_price = float(mid.get('h', 0))
+            low_price = float(mid.get('l', 0))
+            close_price = float(mid.get('c', 0))
+            timestamp = r

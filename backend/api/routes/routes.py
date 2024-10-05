@@ -1,9 +1,13 @@
 # backend/api/routes/routes.py
+from datetime import datetime
+
+from api.services.data_population_service import DataPopulationService
+from api.services.state_machine import StateMachine
+from api.services.trading_services import TradingService
+from config.indicator_config_loader import IndicatorConfigLoader
+from data.repositories._sqlite_db import SQLiteDB
 from flask import Blueprint, Flask, jsonify, request
 from logs.log_manager import LogManager
-from api.services.trading_services import TradingService
-from api.services.data_population_service import DataPopulationService
-from data.repositories._sqlite_db import SQLiteDB
 
 '''
 Creates the Flask app and registers the blueprints. Defines the API routes.
@@ -18,11 +22,14 @@ trading_bp = Blueprint('trading', __name__)
 data_population_bp = Blueprint('data_population', __name__)
 
 # Create a database connection for indicators.db
-db_connection = SQLiteDB("indicators.db")._connect_db()
+indicator_db_connection = SQLiteDB("indicators.db")._connect_db()
+instrument_db_connection = SQLiteDB("instruments.db")._connect_db()
 
-# Initialize services with db_connection
-trading_service = TradingService(db_connection)
+# Initialize services with db connections
+trading_service = TradingService(indicator_db_connection)
 data_population_service = DataPopulationService()
+config_loader = IndicatorConfigLoader()
+state_machine = StateMachine(config_loader, instrument_db_connection)
 
 # -------------------- Main Blueprint --------------------
 @main.route("/", methods=['GET'])
@@ -31,6 +38,52 @@ def main_route():
     Root route for the application.
     """
     return jsonify({'message': 'Welcome to the trading API!'}), 200
+
+from flask import jsonify
+from backend.data.repositories._sqlite_db import SQLiteDB
+
+@main.route("/system-status", methods=['GET'])
+def system_status():
+    instruments_db = SQLiteDB("instruments.db")  # Now using instruments.db
+
+    # Fetch all instruments
+    instruments = instruments_db.fetch_records("instruments")
+
+    response_data = []
+
+    # Fetch the current state for each instrument
+    for instrument in instruments:
+        instrument_id = instrument[0]
+        instrument_name = instrument[1]
+
+        # Fetch the states for each timeframe
+        states = {
+            'macro': get_state(instrument_id, 'macro', instruments_db),
+            'daily': get_state(instrument_id, 'daily', instruments_db),
+            'minute': get_state(instrument_id, 'minute', instruments_db),
+        }
+
+        # Build the response
+        response_data.append({
+            'instrument_id': instrument_id,
+            'instrument_name': instrument_name,
+            'state': states,
+            'timestamp': datetime.now().isoformat()
+        })
+
+    return jsonify(response_data), 200
+
+def get_state(instrument_id, timeframe, db):
+    """
+    Retrieve the state for a specific instrument and timeframe from the database.
+    """
+    
+    if result := db.fetch_records(
+        "instrument_states",
+        {"instrument_id": instrument_id, "timeframe": timeframe},
+    ):
+        return result[0][0]  # Return the first state's value
+    return "UNKNOWN"  # Default to UNKNOWN if no state found
 
 # -------------------- Trading Routes --------------------
 @trading_bp.route('/start', methods=['POST'])
@@ -99,15 +152,41 @@ def performance():
     """
     
     # Create a database connection
-    db_connection = SQLiteDB("indicators.db")._connect_db()
-    # Initialize TradingService with db_connection
-    trading_service = TradingService(db_connection)
+    indicator_db_connection = SQLiteDB("indicators.db")._connect_db()
+    # Initialize TradingService with indicator_db_connection
+    trading_service = TradingService(indicator_db_connection)
 
     try:
-        performance_data = trading_service.get_performance()  # This method should use db_connection
+        performance_data = trading_service.get_performance()  # This method should use indicator_db_connection
         return jsonify(performance_data), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@trading_bp.route('/evaluate_state', methods=['POST'])
+def evaluate_state():
+    """
+    Evaluate the state for an instrument across multiple timeframes (monthly, daily, minute).
+    """
+    data = request.json
+    instrument_id = data.get('instrument_id')
+    indicator_results_by_tier = data.get('indicator_results_by_tier', {})
+    market_conditions = data.get('market_conditions', {})
+
+    # Example structure of indicator_results_by_tier:
+    # {
+    #     'macro': {'RSI': 1, 'ATR': 0, 'BollingerBands': 1},
+    #     'daily': {'RSI': 1, 'ATR': 1, 'BollingerBands': 0},
+    #     'micro': {'RSI': 0, 'ATR': 1, 'BollingerBands': 1}
+    # }
+    
+    # Ensure instrument_id and market_conditions are provided
+    if not instrument_id or not market_conditions:
+        return jsonify({"error": "Missing required parameters: instrument_id or market_conditions"}), 400
+    
+    # Run the state machine and get the states
+    state = state_machine.run_state_machine(instrument_id, indicator_results_by_tier, market_conditions)
+
+    return jsonify({"state": state}), 200
 
 # -------------------- Data Population Routes --------------------
 @data_population_bp.route('/populate_data', methods=['POST'])

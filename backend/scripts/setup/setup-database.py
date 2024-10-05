@@ -1,116 +1,80 @@
+# backend/scripts/setup/setup-database.py
+# This script is used to initialize the databases and populate them with sample data.
+# The sample data includes instruments, indicators, configuration, users, and optimization parameters.
 import os
 import sys
+from backend.logs.log_manager import LogManager  # Import the LogManager class
+from backend.data.repositories._sqlite_db import SQLiteDB  # Use the existing SQLiteDB class
 
-from logs.log_manager import LogManager  # Import the LogManager class
-
-from backend.data.repositories._sqlite_db import initialize_db
+# Import your population scripts
+from backend.scripts.data_import.populate_sample_sqlite_data import populate_sample_data
+from backend.scripts.data_import.populate_instruments import populate_instruments
+from backend.scripts.data_import.populate_indicators import populate_indicators
 
 # Configure logging
 logger = LogManager('database_setup').get_logger()
 
-import os
-import sqlite3
-
-
-def connect_db(db_name=None):
-    """Establish a connection to the SQLite database."""
-    return sqlite3.connect(db_name)
-
-def connect_commit_close(database_path, schema_sql):
-    conn = sqlite3.connect(database_path)
-    cursor = conn.cursor()
-    cursor.executescript(schema_sql)
-    conn.commit()
-    conn.close()
-
-def initialize_db(db_type='sqlite', db_name=None):
+def initialize_db(db_name):
     """
-    Initializes the database based on the provided type and file name.
-
-    :param db_type: Type of the database to create (e.g., 'sqlite').
-    :param db_name: The name of the database file.
-    """
-    # Define the directory for databases
-    databases_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../data/repositories/databases')
-
-    # Ensure the directory exists
-    if not os.path.exists(databases_dir):
-        os.makedirs(databases_dir)
-
-    # Define the path for the database file
-    database_path = os.path.join(databases_dir, db_name)
-
-    # Define the path for the schema file
-    schema_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../data/repositories/schema.sql')
-
-    if not os.path.isfile(schema_path):
-        print(f"Schema file not found: {schema_path}")
-        raise FileNotFoundError(f"Schema file not found: {schema_path}")
-
-    with open(schema_path, 'r') as f:
-        schema_sql = f.read()
-
-    if db_type != 'sqlite':
-        raise NotImplementedError(f"Database type '{db_type}' is not supported.")
-    
-    connect_commit_close(database_path, schema_sql)
-    print(f"SQLite database '{db_name}' initialized successfully at '{database_path}'.")
-
-if __name__ == '__main__':
-    import sys
-    if len(sys.argv) != 3:
-        print("Usage: python setup-database.py <db_type> <db_name>")
-        sys.exit(1)
-    
-    db_type = sys.argv[1]
-    db_name = sys.argv[2]
-    
-    initialize_db(db_type, db_name)
-
-
-def main(db_name='indicators.db', db_type='sqlite'):
-    """
-    Main function to initialize the specified database.
-
-    :param db_name: The name of the database file to be created.
-    :param db_type: The type of database to initialize (currently supports 'sqlite').
+    Initialize the database using the existing SQLiteDB class.
     """
     try:
-        logger.info("Starting database initialization...")
-        initialize_db(db_type=db_type, db_name=db_name)
+        db = SQLiteDB(db_name)
+        db.initialize_db()
         logger.info(f"Database '{db_name}' initialized successfully.")
     except Exception as e:
-        logger.error(f"An error occurred while initializing the database: {e}")
-        print(f"An error occurred: {e}")
+        logger.error(f"Error initializing database '{db_name}': {e}")
+        print(f"An error occurred while initializing '{db_name}': {e}")
+        sys.exit(1)
+
+def populate_data():
+    """
+    Run the population scripts after databases are initialized.
+    """
+    try:
+        logger_data_while_populating()
+    except Exception as e:
+        logger.error(f"Error populating data: {e}")
+        print(f"An error occurred while populating data: {e}")
+        sys.exit(1)
+
+def logger_data_while_populating():
+    logger.info("Populating sample data...")
+    # populate_sample_data()  # Call to populate_sample_sqlite_data
+    logger.info("Populating instruments...")
+    populate_instruments()  # Call to populate_instruments
+    logger.info("Populating indicators...")
+    populate_indicators()  # Call to populate_indicators
+    logger.info("Data population completed successfully.")
+
+def main():
+    """
+    Main function to initialize all or specific databases and populate them.
+    """
+    # List of all database names
+    databases = [
+        'indicators.db',
+        'instruments.db',
+        'optimizer.db',
+        'user.db',
+        'configuration.db'
+    ]
+
+    if len(sys.argv) > 1:
+        db_name = sys.argv[1]
+        if db_name in databases:
+            initialize_db(db_name)
+        else:
+            print(f"Database '{db_name}' is not recognized.")
+            sys.exit(1)
+    else:
+        # Initialize all databases
+        for db_name in databases:
+            print(f"Initializing database '{db_name}'...")
+            initialize_db(db_name)
+
+        # Populate data after initializing databases
+        populate_data()
 
 if __name__ == '__main__':
-    
-    # Default database types and names
-    databases = {
-        'indicators': 'indicators.db',
-        'optimizer': 'optimizer.db',
-        'user': 'user.db',
-        'configuration': 'configuration.db'
-    }
-
-    db_type = sys.argv[1] if len(sys.argv) > 1 else 'sqlite'
-    db_name = sys.argv[2] if len(sys.argv) > 2 else None
-
-    # Validate the database type
-    if db_type not in ['sqlite']:
-        logger.error(f"Unsupported database type: {db_type}")
-        print(f"Unsupported database type: {db_type}")
-        sys.exit(1)
-
-    # Initialize specified database or all databases
-    if db_name is None:
-        for db_file in databases.values():
-            logger.info(f"Initializing '{db_name}' database...")
-            print(f"Initializing database '{db_file}'...")
-            main(db_name=db_file, db_type=db_type)
-    elif db_name in databases.values():
-        main(db_name=db_name, db_type=db_type)
-    else:
-        logger.error(f"Database name '{db_name}' is not recognized.")
-        print(f"Database name '{db_name}' is not recognized.")
-        sys.exit(1)
+    main()
