@@ -55,7 +55,7 @@ def main():
     databases = [
         'indicators.db',
         'instruments.db',
-        historical_data.db,
+        'historical_data.db',
         'optimizer.db',
         'user.db',
         'configuration.db'
