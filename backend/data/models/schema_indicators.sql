@@ -28,3 +28,6 @@ CREATE TABLE IF NOT EXISTS instrument_indicator_results (
     FOREIGN KEY(indicator_id) REFERENCES indicators(id) ON DELETE CASCADE,
     FOREIGN KEY(param_id) REFERENCES indicator_parameters(id) ON DELETE CASCADE
 );
+
+-- Create index for instrument lookups in indicator results
+CREATE INDEX idx_instrument_indicator_instrument_id ON instrument_indicator_results (instrument_id);

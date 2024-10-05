@@ -354,4 +354,19 @@ class MongoDBHandler:
             high_price = float(mid.get('h', 0))
             low_price = float(mid.get('l', 0))
             close_price = float(mid.get('c', 0))
-            timestamp = r
+            timestamp = record.get('time')
+            volume = record.get('volume', 0)
+
+            # Insert into the historical_data table in SQLite
+            sqlite_db.add_record("historical_data", {
+                "instrument_id": instrument_id,
+                "granularity": granularity,
+                "timestamp": timestamp,
+                "price": close_price,  # You can decide which price to store (open, close, etc.)
+                "volume": volume,      # Optional: store volume if needed
+                "open": open_price,
+                "high": high_price,
+                "low": low_price,
+                "close": close_price
+            })
+        logger.info(f"Inserted historical data for {instrument} into SQLite")

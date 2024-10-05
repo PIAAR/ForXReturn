@@ -188,4 +188,28 @@ class SQLiteDB:
             self.conn.commit()
 
             logger.info(f"Record(s) updated in {table_name}")
-        except Except
+        except Exception as e:
+            logger.error(f"Error updating record in {table_name}: {e}")
+        finally:
+            self.close_connection()
+
+    def delete_records(self, table_name, where_clause):
+        """
+        Delete records dynamically from the specified table.
+        :param table_name: The name of the table.
+        :param where_clause: A dictionary for the WHERE clause to specify which records to delete.
+        """
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+
+            where_conditions = ' AND '.join([f"{key} = ?" for key in where_clause])
+            query = f"DELETE FROM {table_name} WHERE {where_conditions}"
+            cursor.execute(query, list(where_clause.values()))
+            self.conn.commit()
+
+            logger.info(f"Record(s) deleted from {table_name}")
+        except Exception as e:
+            logger.error(f"Error deleting record(s) from {table_name}: {e}")
+        finally:
+            self.close_connection()
