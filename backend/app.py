@@ -1,4 +1,4 @@
-from api.routes.routes import create_app
+from backend.api.routes.routes import create_app
 
 '''
 Flask is a web application framework written in Python. It is based on the Werkzeug WSGI toolkit and Jinja2 template engine. 

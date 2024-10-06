@@ -1,6 +1,6 @@
 import requests
-from config.secrets import defs
-from logs.log_manager import LogManager
+from backend.config.secrets import defs
+from backend.logs.log_manager import LogManager
 
 # Initialize the logger
 logger = LogManager('oanda_client_logs').get_logger()

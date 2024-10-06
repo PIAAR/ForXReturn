@@ -14,10 +14,13 @@ def populate_sample_data():
     config_db = SQLiteDB("configuration.db")
     # Connect to the user database
     user_db = SQLiteDB("user.db")
+    # Connect to the historical data database
+    historical_data_db = SQLiteDB("historical_data.db")
 
     # Initialize the databases  
     indicators_db.initialize_db()
     instruments_db.initialize_db()
+    historical_data_db.initialize_db()
     optimizer_db.initialize_db()
     config_db.initialize_db()
     user_db.initialize_db()

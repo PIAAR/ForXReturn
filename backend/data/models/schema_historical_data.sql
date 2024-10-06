@@ -12,5 +12,6 @@ CREATE TABLE IF NOT EXISTS historical_data (
     FOREIGN KEY (instrument_id) REFERENCES instruments(id)
 );
 
--- Create index on instrument_id for quick lookups
-CREATE INDEX idx_historical_instrument_id ON historical_data (instrument_id);
+-- Create the index only if it doesn't exist
+CREATE INDEX IF NOT EXISTS idx_historical_instrument_id ON historical_data (instrument_id);
+

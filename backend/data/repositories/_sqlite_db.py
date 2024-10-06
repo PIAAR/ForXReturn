@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from logs.log_manager import LogManager  # Import the LogManager class
+from backend.logs.log_manager import LogManager  # Import the LogManager class
 
 # Configure logging
 logger = LogManager('sqlite_db_logs').get_logger()
@@ -35,6 +35,7 @@ class SQLiteDB:
         schema_map = {
             'indicators.db': 'schema_indicators.sql',
             'instruments.db': 'schema_instruments.sql',
+            'historical_data.db': 'schema_historical_data.sql',
             'optimizer.db': 'schema_optimizer.sql',
             'configuration.db': 'schema_configuration.sql',
             'user.db': 'schema_user.sql'

@@ -1,13 +1,13 @@
 # backend/api/routes/routes.py
 from datetime import datetime
 
-from api.services.data_population_service import DataPopulationService
-from api.services.state_machine import StateMachine
-from api.services.trading_services import TradingService
-from config.indicator_config_loader import IndicatorConfigLoader
-from data.repositories._sqlite_db import SQLiteDB
+from backend.api.services.data_population_service import DataPopulationService
+from backend.api.services.state_machine import StateMachine
+from backend.api.services.trading_services import TradingService
+from backend.config.indicator_config_loader import IndicatorConfigLoader
+from backend.data.repositories._sqlite_db import SQLiteDB
 from flask import Blueprint, Flask, jsonify, request
-from logs.log_manager import LogManager
+from backend.logs.log_manager import LogManager
 
 '''
 Creates the Flask app and registers the blueprints. Defines the API routes.

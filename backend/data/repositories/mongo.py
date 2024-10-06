@@ -1,9 +1,9 @@
 # backend/data/repositories/mongo.py
 import os
-from config.secrets import defs
+from backend.config.secrets import defs
 from pymongo import MongoClient, errors
-from logs.log_manager import LogManager
-from trading.brokers.oanda_client import OandaClient
+from backend.logs.log_manager import LogManager
+from backend.trading.brokers.oanda_client import OandaClient
 
 # Initialize the logger
 logger = LogManager('mongo_connection_logs').get_logger()
@@ -179,6 +179,7 @@ class MongoDBHandler:
         Reads documents from the collection.
 
         :param query: A dictionary representing the query to match documents.
+        :param collection_name: The name of the collection to read from.
         :return: A list of matched documents.
         """
         if not collection_name:
@@ -237,7 +238,7 @@ class MongoDBHandler:
             except errors.PyMongoError as err:
                 logger.error(f"Failed to close MongoDB connection: {err}")
                 raise
-        
+
     def ensure_database_exists(self):
         """
         Ensures that the database exists by attempting to switch to it.
