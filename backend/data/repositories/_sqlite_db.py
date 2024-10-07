@@ -1,4 +1,5 @@
 import os
+import datetime
 import sqlite3
 from backend.logs.log_manager import LogManager  # Import the LogManager class
 
@@ -87,24 +88,56 @@ class SQLiteDB:
             self.execute_script(schema_sql)
 
     def get_instrument_id(self, instrument_name):
+        # sourcery skip: extract-method, remove-unnecessary-else, use-named-expression
         """
-        Retrieve the instrument_id for the given instrument name.
-        If the instrument doesn't exist, it will be inserted.
+        Retrieve the instrument ID from the `instruments` table based on the instrument name.
+        :param instrument_name: The name of the instrument (e.g., 'EUR_USD').
+        :return: Instrument ID if found, otherwise None.
         """
-        query = "SELECT id FROM instruments WHERE name = ?"
-        
-        # Execute the query to find the instrument_id by name
-        self._connect_db()
-        cursor = self.conn.cursor()
-        cursor.execute(query, (instrument_name,))
-        result = cursor.fetchone()
-        
-        # If no result, insert the instrument
-        if not result:
-            instrument_id = self.add_record_to_the_database({"name": instrument_name}, "instruments")
-            logger.info(f"Inserted new instrument: {instrument_name} with ID {instrument_id}")
-            return instrument_id
-        return result[0]  # Return the existing instrument_id
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+
+            query = "SELECT id FROM instruments WHERE name = ?"
+            cursor.execute(query, (instrument_name,))
+            result = cursor.fetchone()
+
+            if result:
+                return result[0]
+            else:
+                logger.error(f"Instrument {instrument_name} not found.")
+                return None
+        except Exception as e:
+            logger.error(f"Error fetching instrument ID: {e}")
+            return None
+        finally:
+            self.close_connection()
+
+    def get_indicator_id(self, indicator_name):
+        # sourcery skip: extract-method, inline-variable, remove-unnecessary-else, use-named-expression
+        """
+        Retrieve the indicator ID from the `indicators` table based on the indicator name.
+        :param indicator_name: The name of the indicator (e.g., 'SMA').
+        :return: Indicator ID if found, otherwise None.
+        """
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+
+            query = "SELECT id FROM indicators WHERE name = ?"
+            cursor.execute(query, (indicator_name,))
+            result = cursor.fetchone()
+
+            if result:
+                return result[0]
+            else:
+                logger.error(f"Indicator {indicator_name} not found.")
+                return None
+        except Exception as e:
+            logger.error(f"Error fetching indicator ID: {e}")
+            return None
+        finally:
+            self.close_connection()
 
     def add_record(self, table_name, data):
         """
@@ -133,6 +166,33 @@ class SQLiteDB:
         logger.info(f"Record added to {table_name}")
         return cursor.lastrowid
 
+    def add_optimized_params(self, instrument_id, indicator_id, params):
+        """
+            Insert optimized parameters into the optimized_parameters table.
+            :param instrument_id: The instrument ID (from instruments table).
+            :param indicator_id: The indicator ID (from indicators table).
+            :param params: A dictionary of the optimized parameters.
+            """
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+
+            query = """
+                    INSERT INTO optimized_parameters (instrument_id, indicator_id, parameter_name, parameter_value, timestamp)
+                    VALUES (?, ?, ?, ?, ?)
+                    """
+                # Insert the optimized parameters into the `optimized_parameters` table
+            for param_name, param_value in params.items():
+                timestamp = datetime.now().isoformat()
+                cursor.execute(query, (instrument_id, indicator_id, param_name, param_value, timestamp))
+
+            self.conn.commit()
+            logger.info("Optimized parameters added to the database.")
+        except Exception as e:
+            logger.error(f"Failed to insert optimized parameters: {e}")
+        finally:
+            self.close_connection()
+
     def fetch_records(self, table_name, where_clause=None):
         """
         Retrieve records dynamically from the specified table.
@@ -155,62 +215,4 @@ class SQLiteDB:
         query = f"SELECT * FROM {table_name}"
         parameters = []
         if where_clause:
-            where_conditions = ' AND '.join([f"{key} = ?" for key in where_clause])
-            query += f" WHERE {where_conditions}"
-            parameters = list(where_clause.values())
-            
-        cursor.execute(query, parameters)
-        # print(f"Executing query: {query}")  # Debugging line
-        # print(f"With parameters: {parameters}")  # Debugging line
-
-        results = cursor.fetchall()
-        # Convert the sqlite3.Row objects into dictionaries for easy access
-        # records = [dict(row) for row in results]
-
-        logger.info(f"Fetched {len(results)} records from {table_name}")
-        return results
-
-    def update_record(self, table_name, data, where_clause):
-        """
-        Update records dynamically in the specified table.
-        :param table_name: The name of the table.
-        :param data: A dictionary of column names and values to be updated.
-        :param where_clause: A dictionary for the WHERE clause to specify which records to update.
-        """
-        try:
-            self._connect_db()
-            cursor = self.conn.cursor()
-
-            set_clause = ', '.join([f"{key} = ?" for key in data])
-            where_conditions = ' AND '.join([f"{key} = ?" for key in where_clause])
-            query = f"UPDATE {table_name} SET {set_clause} WHERE {where_conditions}"
-
-            cursor.execute(query, list(data.values()) + list(where_clause.values()))
-            self.conn.commit()
-
-            logger.info(f"Record(s) updated in {table_name}")
-        except Exception as e:
-            logger.error(f"Error updating record in {table_name}: {e}")
-        finally:
-            self.close_connection()
-
-    def delete_records(self, table_name, where_clause):
-        """
-        Delete records dynamically from the specified table.
-        :param table_name: The name of the table.
-        :param where_clause: A dictionary for the WHERE clause to specify which records to delete.
-        """
-        try:
-            self._connect_db()
-            cursor = self.conn.cursor()
-
-            where_conditions = ' AND '.join([f"{key} = ?" for key in where_clause])
-            query = f"DELETE FROM {table_name} WHERE {where_conditions}"
-            cursor.execute(query, list(where_clause.values()))
-            self.conn.commit()
-
-            logger.info(f"Record(s) deleted from {table_name}")
-        except Exception as e:
-            logger.error(f"Error deleting record(s) from {table_name}: {e}")
-        finally:
-            self.close_connection()
+            where_conditions = ' AND '.join([f"

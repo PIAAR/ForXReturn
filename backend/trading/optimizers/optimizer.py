@@ -24,7 +24,6 @@ class Optimizer:
         """
         best_result = None
         best_params = None
-        # indicator_name = None
 
         # Get the correct column name based on the indicator function
         if indicator_func == SMA.calculate:
@@ -35,6 +34,14 @@ class Optimizer:
             indicator_name = 'rsi'
         else:
             logger.error("Unknown indicator function.")
+            return {}, {}
+        
+        # Get the IDs for the instrument and the indicator
+        instrument_id = self.db_handler.get_instrument_id(instrument)
+        indicator_id = self.db_handler.get_indicator_id(indicator_name)
+
+        if not instrument_id or not indicator_id:
+            logger.error("Missing instrument or indicator ID, cannot continue optimization.")
             return {}, {}
 
         for params in param_combinations:
@@ -73,47 +80,47 @@ class Optimizer:
         # Ensure we return the best result and parameters
         if best_result and best_params:
             logger.info(f"Best result: {best_result} with params: {best_params}")
-            self.store_optimized_params(instrument, indicator_name, best_params)
+            self.store_optimized_params(instrument_id, indicator_id, best_params)
             return best_result, best_params
         else:
             logger.error("No valid result was found during optimization.")
             return {}, {}
 
-    def save_optimized_parameters(self, indicator_name, params):
+    def save_optimized_parameters(self, instrument_id, indicator_id, params):
         """
         Save optimized parameters to the SQLite database.
         
-        :param indicator_name: The name of the indicator (e.g., 'SMA').
+        :param instrument_id: The ID of the financial instrument.
+        :param indicator_id: The ID of the indicator.
         :param params: Dictionary of the optimized parameters.
         """
         timestamp = datetime.now().isoformat()
-        indicator_id = self.db_handler.get_indicator_id(indicator_name)
 
         if not indicator_id:
-            logger.error(f"Indicator {indicator_name} not found in database.")
+            logger.error("Indicator ID not found in the database.")
             return
 
         # Insert the parameters into the database
         for param_name, param_value in params.items():
             try:
-                self.db_handler.add_indicator_parameters(indicator_id, {param_name: param_value})
-                logger.info(f"Optimized parameters for {indicator_name} saved to the database at {timestamp}.")
+                self.db_handler.add_optimized_params(instrument_id, indicator_id, {param_name: param_value})
+                logger.info(f"Optimized parameters for indicator {indicator_id} on instrument {instrument_id} saved at {timestamp}.")
             except Exception as e:
-                logger.error(f"Failed to save optimized parameters for {indicator_name}: {e}")
+                logger.error(f"Failed to save optimized parameters for indicator {indicator_id}: {e}")
 
-    def store_optimized_params(self, instrument, indicator_name, params):
+    def store_optimized_params(self, instrument_id, indicator_id, params):
         """
         Store the best-performing parameters in the SQLite database.
         
-        :param instrument: The financial instrument (e.g., "EUR_USD").
-        :param indicator_name: The name of the indicator.
+        :param instrument_id: The ID of the financial instrument.
+        :param indicator_id: The ID of the indicator.
         :param params: Dictionary of optimized parameters.
         """
         try:
-            self.db_handler.add_optimized_params(instrument, params)
-            logger.info(f"Optimized parameters for {indicator_name} on {instrument} stored in the database.")
+            self.save_optimized_parameters(instrument_id, indicator_id, params)
+            logger.info(f"Optimized parameters for instrument {instrument_id} and indicator {indicator_id} stored in the database.")
         except Exception as e:
-            logger.error(f"Error storing optimized parameters for {indicator_name} on {instrument}: {e}")
+            logger.error(f"Error storing optimized parameters for instrument {instrument_id} and indicator {indicator_id}: {e}")
 
     def run_optimization(self, indicator_func, data, **kwargs):
         """

@@ -13,5 +13,4 @@ CREATE TABLE IF NOT EXISTS historical_data (
 );
 
 -- Create the index only if it doesn't exist
-CREATE INDEX IF NOT EXISTS idx_historical_instrument_id ON historical_data (instrument_id);
-
+CREATE INDEX IF NOT EXISTS idx_historical_instrument_id ON historical_data (instrume
