@@ -5,7 +5,7 @@ from config.indicator_config_loader import IndicatorConfigLoader
 class TestStateMachine(unittest.TestCase):
     def setUp(self):
         # Load the YAML configuration file
-        self.config_loader = IndicatorConfigLoader('/Users/black_mac/Documents/GitHub/Forex/ForXReturn/backend/scripts/yml/indicator_parameters.yml')
+        self.config_loader = IndicatorConfigLoader('/backend/scripts/yml/indicator_params.yml')
         self.state_machine = StateMachine(self.config_loader)
     
     def test_state_machine(self):

@@ -215,4 +215,62 @@ class SQLiteDB:
         query = f"SELECT * FROM {table_name}"
         parameters = []
         if where_clause:
-            where_conditions = ' AND '.join([f"
+            where_conditions = ' AND '.join([f"{key} = ?" for key in where_clause])
+            query += f" WHERE {where_conditions}"
+            parameters = list(where_clause.values())
+            
+        cursor.execute(query, parameters)
+        # print(f"Executing query: {query}")  # Debugging line
+        # print(f"With parameters: {parameters}")  # Debugging line
+
+        results = cursor.fetchall()
+        # Convert the sqlite3.Row objects into dictionaries for easy access
+        # records = [dict(row) for row in results]
+
+        logger.info(f"Fetched {len(results)} records from {table_name}")
+        return results
+
+    def update_record(self, table_name, data, where_clause):
+        """
+        Update records dynamically in the specified table.
+        :param table_name: The name of the table.
+        :param data: A dictionary of column names and values to be updated.
+        :param where_clause: A dictionary for the WHERE clause to specify which records to update.
+        """
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+
+            set_clause = ', '.join([f"{key} = ?" for key in data])
+            where_conditions = ' AND '.join([f"{key} = ?" for key in where_clause])
+            query = f"UPDATE {table_name} SET {set_clause} WHERE {where_conditions}"
+
+            cursor.execute(query, list(data.values()) + list(where_clause.values()))
+            self.conn.commit()
+
+            logger.info(f"Record(s) updated in {table_name}")
+        except Exception as e:
+            logger.error(f"Error updating record in {table_name}: {e}")
+        finally:
+            self.close_connection()
+
+    def delete_records(self, table_name, where_clause):
+        """
+        Delete records dynamically from the specified table.
+        :param table_name: The name of the table.
+        :param where_clause: A dictionary for the WHERE clause to specify which records to delete.
+        """
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+
+            where_conditions = ' AND '.join([f"{key} = ?" for key in where_clause])
+            query = f"DELETE FROM {table_name} WHERE {where_conditions}"
+            cursor.execute(query, list(where_clause.values()))
+            self.conn.commit()
+
+            logger.info(f"Record(s) deleted from {table_name}")
+        except Exception as e:
+            logger.error(f"Error deleting record(s) from {table_name}: {e}")
+        finally:
+            self.close_connection()

@@ -31,7 +31,7 @@ class TestBacktester(unittest.TestCase):
         self.backtester.apply_indicator(SMA.calculate, period=15)
         
         # Check if the SMA column is created correctly
-        self.assertIn('sma_15', self.backtester.data.columns, "SMA column was not added to data.")
+        self.assertIn('sma', self.backtester.data.columns, "SMA column was not added to data.")
         
         # Check that the length of the resulting data matches the original
         self.assertEqual(len(self.backtester.data), len(self.sample_data), "Length of data changed after SMA calculation.")

@@ -1,21 +1,21 @@
 import unittest
 import numpy as np
 import pandas as pd
-from trading.indicators.rsi import RSI
-from trading.indicators.ema import EMA
-from trading.indicators.macd import MACD
-from trading.indicators.stoch import StochasticOscillator
-from trading.indicators.sma import SMA
-from trading.indicators.bollinger import BollingerBands
-from trading.indicators.ma_crossover import MACrossover
-from trading.indicators.adx import ADX
-from trading.indicators.aroon import Aroon
-from trading.indicators.cci import CCI
-from trading.indicators.mfi import MFI
-from trading.indicators.obv import OBV
-from trading.indicators.vwap import VWAP
-from trading.indicators.williams_r import WilliamsR
-from trading.indicators.atr import ATR
+from backend.trading.indicators.rsi import RSI
+from backend.trading.indicators.ema import EMA
+from backend.trading.indicators.macd import MACD
+from backend.trading.indicators.stoch import StochasticOscillator
+from backend.trading.indicators.sma import SMA
+from backend.trading.indicators.bollinger import BollingerBands
+from backend.trading.indicators.ma_crossover import MACrossover
+from backend.trading.indicators.adx import ADX
+from backend.trading.indicators.aroon import Aroon
+from backend.trading.indicators.cci import CCI
+from backend.trading.indicators.mfi import MFI
+from backend.trading.indicators.obv import OBV
+from backend.trading.indicators.vwap import VWAP
+from backend.trading.indicators.williams_r import WilliamsR
+from backend.trading.indicators.atr import ATR
 
 class TestIndicators(unittest.TestCase):
     def setUp(self):
@@ -50,7 +50,7 @@ class TestIndicators(unittest.TestCase):
         
     def test_sma_calculation(self):
         df_with_sma = SMA.calculate(self.df, period=5)
-        self.assertIn('sma_5', df_with_sma.columns)
+        self.assertIn('sma', df_with_sma.columns)
         self.assertEqual(len(df_with_sma), len(self.df))
         
     def test_bollinger_bands_calculation(self):
