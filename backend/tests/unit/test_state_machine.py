@@ -1,13 +1,32 @@
 import unittest
-from api.services.state_machine import StateMachine
-from config.indicator_config_loader import IndicatorConfigLoader
+import os
+from unittest.mock import patch
+from backend.api.services.state_machine import StateMachine
+from backend.config.indicator_config_loader import IndicatorConfigLoader
+from backend.data.repositories._sqlite_db import SQLiteDB
 
 class TestStateMachine(unittest.TestCase):
     def setUp(self):
-        # Load the YAML configuration file
-        self.config_loader = IndicatorConfigLoader('/backend/scripts/yml/indicator_params.yml')
-        self.state_machine = StateMachine(self.config_loader)
-    
+        # Determine the correct path for the YAML file
+        base_path = os.path.dirname(__file__)  # Current directory of the test file
+        yaml_path = os.path.join(base_path, '../../scripts/yml/indicator_params.yml')
+        # Initialize SQLiteDB connection
+        self.db_connection = SQLiteDB(db_name="instruments.db")  # Use your actual database name
+
+        # Load the YAML configuration file or mock it if not present
+        if os.path.exists(yaml_path):
+            self.config_loader = IndicatorConfigLoader(yaml_path)
+        else:
+            # If the file doesn't exist, patch the IndicatorConfigLoader to prevent the FileNotFoundError
+            patcher = patch('config.indicator_config_loader.IndicatorConfigLoader')
+            self.addCleanup(patcher.stop)
+            MockLoader = patcher.start()
+            self.config_loader = MockLoader.return_value
+            self.config_loader.get_indicator_params.return_value = {'ATR': 1, 'ADX': 0}  # Mocked example config
+
+        # Initialize the state machine with the config loader
+        self.state_machine = StateMachine(self.config_loader, self.db_connection)
+
     def test_state_machine(self):
         # Simulate some results (1 = favorable, 0 = not favorable)
         indicator_results_macro = {
@@ -37,10 +56,18 @@ class TestStateMachine(unittest.TestCase):
             'micro': indicator_results_micro
         }
 
+        # Market conditions for testing
+        market_conditions = {
+            'volatility': 5,
+            'risk_level': 6
+        }
+
         # Run the state machine to evaluate each tier
-        states = self.state_machine.run_state_machine(indicator_results_by_tier)
+        states = self.state_machine.run_state_machine('EUR_USD', indicator_results_by_tier, market_conditions)
 
         # Assert that the results match the expected output
+        print(f"States: {states}")  # Debugging line to print states
+        self.assertIn('macro', states)  # Check that 'macro' exists
         self.assertEqual(states['macro'], 'Red')
         self.assertEqual(states['daily'], 'Red')
         self.assertEqual(states['micro'], 'Red')

@@ -42,10 +42,10 @@ class TestBacktester(unittest.TestCase):
 
         # Define buy/sell signals based on SMA
         def buy_signal(row):
-            return row['close'] > row['sma_60']
+            return row['close'] > row['sma']
 
         def sell_signal(row):
-            return row['close'] < row['sma_60']
+            return row['close'] < row['sma']
 
         # Simulate trades
         self.backtester.simulate_trades(buy_signal, sell_signal)
@@ -68,7 +68,7 @@ class TestBacktester(unittest.TestCase):
         self.backtester.apply_indicator(SMA.calculate, period=15)
         
         # Ensure SMA column was not added
-        self.assertNotIn('sma_15', self.backtester.data.columns, "SMA should not be calculated with insufficient data.")
+        self.assertNotIn('sma', self.backtester.data.columns, "SMA should not be calculated with insufficient data.")
         
     def test_no_trades_scenario(self):
         # Reset data and apply the SMA indicator
@@ -102,10 +102,10 @@ class TestBacktester(unittest.TestCase):
 
         # Define buy/sell signals that always make profitable trades
         def buy_signal(row):
-            return row['close'] < row['sma_15']  # Buy when price is below SMA (for profit)
+            return row['close'] < row['sma']  # Buy when price is below SMA (for profit)
 
         def sell_signal(row):
-            return row['close'] > row['sma_15']  # Sell when price is above SMA (for profit)
+            return row['close'] > row['sma']  # Sell when price is above SMA (for profit)
 
         # Simulate trades
         self.backtester.simulate_trades(buy_signal, sell_signal)
@@ -127,10 +127,10 @@ class TestBacktester(unittest.TestCase):
 
         # Define buy/sell signals that always make losing trades
         def buy_signal(row):
-            return row['close'] > row['sma_15']  # Buy when price is below SMA (for a loss scenario)
+            return row['close'] > row['sma']  # Buy when price is below SMA (for a loss scenario)
 
         def sell_signal(row):
-            return row['close'] < row['sma_15']  # Sell when price is above SMA (for a loss scenario)
+            return row['close'] < row['sma']  # Sell when price is above SMA (for a loss scenario)
 
         # Simulate trades
         self.backtester.simulate_trades(buy_signal, sell_signal)

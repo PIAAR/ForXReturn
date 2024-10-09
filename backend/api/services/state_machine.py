@@ -1,6 +1,9 @@
-# backend/api/services/state_machine.py
 from datetime import datetime
 from backend.data.repositories._sqlite_db import SQLiteDB
+from logs.log_manager import LogManager
+
+# Configure the logger
+logger = LogManager('state_machine_logs').get_logger()
 
 class StateMachine:
     def __init__(self, indicator_loader, db_connection):
@@ -11,27 +14,22 @@ class StateMachine:
     def calculate_weighted_score(self, indicator_results, tier):
         """
         Calculate the weighted score based on indicator results and weights.
-        :param indicator_results: A dictionary of {indicator_name: result} (result is 1 for favorable, 0 for not).
-        :param tier: The current analysis tier (macro, daily, micro).
-        :return: Weighted score for the tier.
         """
         weighted_sum = 0
         total_weight = 0
 
         for indicator_name, result in indicator_results.items():
-            if indicator_params := self.indicator_loader.get_indicator_params(
-                indicator_name, tier
-            ):
+            logger.info(f"Processing {indicator_name} for {tier}")
+            indicator_params = self.indicator_loader.get_indicator_params(indicator_name, tier)
+            if indicator_params:
                 weight = indicator_params.get('weight', 1)  # Default to weight 1 if not found
                 weighted_sum += result * weight
                 total_weight += weight
 
         # Calculate the weighted average score
-        if total_weight > 0:
-            weighted_score = weighted_sum / total_weight
-            print(f"Weighted Score for {tier}: {weighted_score}")  # Debugging line
-            return weighted_score
-        return 0
+        weighted_score = (weighted_sum / total_weight) if total_weight > 0 else 0
+        logger.info(f"Weighted Score for {tier}: {weighted_score}")
+        return weighted_score
 
     def can_trade(self, instrument_id):
         """
@@ -49,7 +47,7 @@ class StateMachine:
         Transition to a new state for a specific instrument and timeframe.
         """
         if new_state in ['RED', 'YELLOW', 'GREEN']:
-            print(f"Transitioning {timeframe} state for instrument {instrument_id} to {new_state}")
+            logger.info(f"Transitioning {timeframe} state for instrument {instrument_id} to {new_state}")
             self.current_state = new_state
             self.update_state_in_db(instrument_id, timeframe, new_state)
         else:
@@ -58,22 +56,12 @@ class StateMachine:
     def evaluate_state(self, instrument_id, market_conditions, timeframe, weighted_score, threshold=0.7):
         """
         Evaluate market conditions and decide which state to transition to.
-        Evaluate if the current state is Green or Red based on the weighted score.
-        :param instrument_id: The instrument ID.
-        :param market_conditions: A dictionary of market conditions (e.g., volatility, risk level).
-        :param timeframe: The timeframe to evaluate (e.g., 'monthly', 'daily', 'minute').
-        :param weighted_score: The weighted score for the tier.
-        :param threshold: Threshold above which the state is considered Green.
         """
         risk_level = market_conditions.get('risk_level', 0)
         volatility = market_conditions.get('volatility', 0)
 
         # Determine the state based on weighted score and market conditions
-        if (
-            weighted_score >= threshold
-            and (risk_level > 7 or volatility > 5)
-            or weighted_score < threshold
-        ):
+        if (weighted_score >= threshold and (risk_level > 7 or volatility > 5)) or weighted_score < threshold:
             self.transition_to(instrument_id, timeframe, 'RED')
         elif 4 < risk_level <= 7:
             self.transition_to(instrument_id, timeframe, 'YELLOW')
@@ -85,13 +73,11 @@ class StateMachine:
         Get the current state of the instrument for the specified timeframe.
         """
         instrument_id = self.db.get_instrument_id(instrument_name)
-        query_result = self.db.fetch_records(
-            "instrument_states",
-            {"instrument_id": instrument_id, "timeframe": timeframe},
-        )
+        query_result = self.db.fetch_records("instrument_states", {"instrument_id": instrument_id, "timeframe": timeframe})
         
         if query_result and "state" in query_result[0]:
             return query_result[0]["state"]
+        logger.warning(f"No state found for {instrument_name} in {timeframe}, returning 'UNKNOWN'")
         return 'UNKNOWN'
 
     def update_state_in_db(self, instrument_id, timeframe, new_state):
@@ -107,27 +93,22 @@ class StateMachine:
                 last_updated = excluded.last_updated
         """
         
-        SQLiteDB.execute_script(query, (instrument_id, timeframe, new_state, timestamp))
+        try:
+            self.db.execute_script(query, (instrument_id, timeframe, new_state, timestamp))
+            logger.info(f"State for {instrument_id} on {timeframe} updated to {new_state}.")
+        except Exception as e:
+            logger.error(f"Failed to update state in DB: {e}")
 
-    def run_state_machine(self, instrument_id, indicator_results_by_tier, market_conditions):
+    def run_state_machine(self, instrument_name, indicator_results_by_tier, market_conditions):
         """
         Run the state machine logic across all tiers (macro, daily, micro).
-        :param instrument_id: The instrument ID to update in the database.
-        :param indicator_results_by_tier: A dictionary of {tier: {indicator_name: result}}.
-        :param market_conditions: A dictionary of market conditions (volatility, risk level, etc.)
-        :return: State for each tier.
         """
         states = {}
         for tier, indicator_results in indicator_results_by_tier.items():
+            logger.info(f"Processing {tier} tier for {instrument_name}")
             weighted_score = self.calculate_weighted_score(indicator_results, tier)
-            self.evaluate_state(instrument_id, market_conditions, tier, weighted_score)
-            # After evaluation, get the updated state from the database
-            state = self.get_current_state(instrument_id, tier)
+            self.evaluate_state(instrument_name, market_conditions, tier, weighted_score)
+            state = self.get_current_state(instrument_name, tier)
             states[tier] = state
 
         return states
-
-# # Initialize the StateMachine with the IndicatorConfigLoader and SQLite connection
-# indicator_loader = IndicatorConfigLoader()
-# db_connection = SQLiteDB("instruments.db")
-# state_machine = StateMachine(indicator_loader, db_connection)

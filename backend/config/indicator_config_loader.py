@@ -1,23 +1,27 @@
 import yaml
-import os
 
 class IndicatorConfigLoader:
-    def __init__(self, config_path='/Users/black_mac/Documents/GitHub/Forex/ForXReturn/backend/scripts/yml/indicator_params.yml'):
-        if not os.path.isfile(config_path):
+    def __init__(self, config_path):
+        """
+        Load the YAML configuration file.
+        :param config_path: Path to the YAML config file.
+        """
+        try:
+            with open(config_path, 'r') as file:
+                self.config = yaml.safe_load(file)
+        except FileNotFoundError:
             raise FileNotFoundError(f"YAML config file not found: {config_path}")
-        self.config_path = config_path
-        self.indicator_params = self.load_config()
-
-    def load_config(self):
-        with open(self.config_path, 'r') as file:
-            return yaml.safe_load(file)
 
     def get_indicator_params(self, indicator_name, tier):
         """
-        Get parameters and weight for a specific indicator and tier (macro, daily, micro).
+        Returns the indicator parameters from the loaded YAML file.
+        :return: Dictionary of indicator parameters.
         """
-        if indicator_name in self.indicator_params:
-            indicator_data = self.indicator_params[indicator_name]
+        # Navigate the YAML config to find the relevant parameters
+        if indicator_name in self.config['indicators']:
+            indicator_data = self.config['indicators'][indicator_name]
             if tier in indicator_data:
                 return indicator_data[tier]
+        
         return None
+        # return self.config.get('indicators', {})

@@ -17,7 +17,6 @@ def evaluate_and_store_states():
 
     # Iterate over each instrument and evaluate the state
     for instrument in instruments:
-        instrument_id = instrument[0]  # Assuming ID is the first column
         instrument_name = instrument[1]  # Assuming Name is the second column
 
         # Example market conditions, these would be derived from real data
@@ -33,12 +32,14 @@ def evaluate_and_store_states():
             'minute': {'RSI': 0, 'ATR': 1, 'BollingerBands': 1}
         }
 
-        # Run the state machine for the instrument
-        states = state_machine.run_state_machine(instrument_id, indicator_results_by_tier, market_conditions)
+        # Run the state machine for the instrument (use instrument_name, which is converted to instrument_id internally)
+        states = state_machine.run_state_machine(instrument_name, indicator_results_by_tier, market_conditions)
 
         # Store the state results in the database
         timestamp = datetime.now().isoformat()
         for tier, state in states.items():
+            # Get instrument_id from instrument_name inside the state machine
+            instrument_id = instruments_db.get_instrument_id(instrument_name)
             state_machine.update_state_in_db(instrument_id, tier, state)
 
         print(f"States for {instrument_name}: {states}")

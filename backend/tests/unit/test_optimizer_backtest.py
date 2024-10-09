@@ -12,7 +12,7 @@ class MockStrategy(Strategy):
     """
     def init(self):
         print(self.data.Close) 
-        self.sma = self.I(SMA.sma_indicator, self.data.Close, 20)
+        self.sma = self.I(SMA.calculate, self.data.Close, 20)
 
     def next(self):
         if self.data.Close[-1] > self.sma[-1]:

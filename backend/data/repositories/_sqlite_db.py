@@ -77,18 +77,21 @@ class SQLiteDB:
         except Exception as e:
             logger.error(f"Error executing schema script: {e}")
         finally:
-            logger.info(f"Closing the connection for self: {self}")  # Check what `self` is here
             self.close_connection()
 
-    def initialize_db(self):
+    def initialize_db(self, schema_sql=None):
         """
-        Initialize the database using the appropriate schema.
+        Initialize the database using the appropriate schema or provided schema_sql.
+        :param schema_sql: The SQL script for creating the necessary tables (optional).
         """
-        if schema_sql := self.load_schema():
+        if schema_sql:
             self.execute_script(schema_sql)
+        else:
+            # Load the default schema for the current database
+            if schema_sql := self.load_schema():
+                self.execute_script(schema_sql)
 
     def get_instrument_id(self, instrument_name):
-        # sourcery skip: extract-method, remove-unnecessary-else, use-named-expression
         """
         Retrieve the instrument ID from the `instruments` table based on the instrument name.
         :param instrument_name: The name of the instrument (e.g., 'EUR_USD').
@@ -114,7 +117,6 @@ class SQLiteDB:
             self.close_connection()
 
     def get_indicator_id(self, indicator_name):
-        # sourcery skip: extract-method, inline-variable, remove-unnecessary-else, use-named-expression
         """
         Retrieve the indicator ID from the `indicators` table based on the indicator name.
         :param indicator_name: The name of the indicator (e.g., 'SMA').
@@ -136,6 +138,144 @@ class SQLiteDB:
         except Exception as e:
             logger.error(f"Error fetching indicator ID: {e}")
             return None
+        finally:
+            self.close_connection()
+
+    def get_indicator_parameters(self, indicator_id):
+        """
+        Retrieve the parameters for a given indicator from the database.
+
+        :param indicator_id: The ID of the indicator to retrieve parameters for.
+        :return: A dictionary of parameter names and their values.
+        """
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+
+            query = """
+                SELECT parameter_name, parameter_value
+                FROM indicator_parameters
+                WHERE indicator_id = ?
+            """
+            cursor.execute(query, (indicator_id,))
+            rows = cursor.fetchall()
+
+            # Convert the result into a dictionary
+            parameters = {row[0]: row[1] for row in rows}
+
+            logger.info(f"Retrieved parameters for indicator ID {indicator_id}.")
+            return parameters
+        except Exception as e:
+            logger.error(f"Error retrieving indicator parameters: {e}")
+            return {}
+        finally:
+            self.close_connection()
+
+    def get_indicator_results(self, indicator_id):
+        """
+        Retrieve the results for a given indicator from the database.
+
+        :param indicator_id: The ID of the indicator to retrieve results for.
+        :return: A list of dictionaries containing result data.
+        """
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+
+            query = """
+                SELECT timestamp, parameter_name, result_value
+                FROM indicator_results
+                WHERE indicator_id = ?
+            """
+            cursor.execute(query, (indicator_id,))
+            rows = cursor.fetchall()
+
+            # Convert the result into a list of dictionaries
+            results = [{"timestamp": row[0], "parameter_name": row[1], "result_value": row[2]} for row in rows]
+
+            logger.info(f"Retrieved results for indicator ID {indicator_id}.")
+            return results
+        except Exception as e:
+            logger.error(f"Error retrieving indicator results: {e}")
+            return []
+        finally:
+            self.close_connection()
+
+    def add_indicator(self, name, indicator_type):
+        """
+        Add a new indicator to the indicators table.
+        :param name: Name of the indicator (e.g., 'SMA').
+        :param indicator_type: The type of indicator (e.g., 'volatility', 'trend', etc.).
+        """
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+
+            query = """
+                INSERT INTO indicators (name, type, created_at)
+                VALUES (?, ?, ?)
+            """
+            timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            cursor.execute(query, (name, indicator_type, timestamp))
+            self.conn.commit()
+
+            logger.info(f"Indicator '{name}' of type '{indicator_type}' added to the database.")
+        except Exception as e:
+            logger.error(f"Error adding indicator: {e}")
+        finally:
+            self.close_connection()
+
+    def add_indicator_parameters(self, indicator_id, params):
+            """
+            Add or update indicator parameters in the database.
+            :param indicator_id: The ID of the indicator.
+            :param params: A dictionary of parameters to be added or updated (e.g., {'period': 14, 'multiplier': 1.5}).
+            """
+            try:
+                self._connect_db()
+                cursor = self.conn.cursor()
+
+                # Insert or update each parameter for the indicator
+                query = """
+                    INSERT INTO indicator_parameters (indicator_id, parameter_name, parameter_value, last_updated)
+                    VALUES (?, ?, ?, ?)
+                    ON CONFLICT(indicator_id, parameter_name) DO UPDATE SET
+                    parameter_value = excluded.parameter_value,
+                    last_updated = excluded.last_updated
+                """
+                timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                for param_name, param_value in params.items():
+                    cursor.execute(query, (indicator_id, param_name, param_value, timestamp))
+
+                self.conn.commit()
+                logger.info(f"Parameters for indicator ID {indicator_id} updated: {params}")
+            except Exception as e:
+                logger.error(f"Error updating indicator parameters: {e}")
+            finally:
+                self.close_connection()
+
+    def add_indicator_results(self, indicator_id, timestamp, result_name, result_value):
+        """
+        Insert indicator results into the indicator_results table.
+        :param indicator_id: The ID of the indicator (from the indicators table).
+        :param timestamp: The timestamp for when the result was calculated.
+        :param result_name: The name of the result (e.g., 'atr_value').
+        :param result_value: The value of the result (e.g., 1.23).
+        """
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+
+            query = """
+                INSERT INTO indicator_results (indicator_id, timestamp, result_name, result_value)
+                VALUES (?, ?, ?, ?)
+            """
+
+            cursor.execute(query, (indicator_id, timestamp, result_name, result_value))
+            self.conn.commit()
+            logger.info(f"Indicator result added for indicator ID {indicator_id} at {timestamp}")
+        except Exception as e:
+            logger.error(f"Error adding indicator result: {e}")
         finally:
             self.close_connection()
 
@@ -168,11 +308,11 @@ class SQLiteDB:
 
     def add_optimized_params(self, instrument_id, indicator_id, params):
         """
-            Insert optimized parameters into the optimized_parameters table.
-            :param instrument_id: The instrument ID (from instruments table).
-            :param indicator_id: The indicator ID (from indicators table).
-            :param params: A dictionary of the optimized parameters.
-            """
+        Insert optimized parameters into the optimized_parameters table.
+        :param instrument_id: The instrument ID (from instruments table).
+        :param indicator_id: The indicator ID (from indicators table).
+        :param params: A dictionary of the optimized parameters.
+        """
         try:
             self._connect_db()
             cursor = self.conn.cursor()
@@ -181,9 +321,8 @@ class SQLiteDB:
                     INSERT INTO optimized_parameters (instrument_id, indicator_id, parameter_name, parameter_value, timestamp)
                     VALUES (?, ?, ?, ?, ?)
                     """
-                # Insert the optimized parameters into the `optimized_parameters` table
             for param_name, param_value in params.items():
-                timestamp = datetime.now().isoformat()
+                timestamp = datetime.datetime.now().isoformat()
                 cursor.execute(query, (instrument_id, indicator_id, param_name, param_value, timestamp))
 
             self.conn.commit()
@@ -218,15 +357,10 @@ class SQLiteDB:
             where_conditions = ' AND '.join([f"{key} = ?" for key in where_clause])
             query += f" WHERE {where_conditions}"
             parameters = list(where_clause.values())
-            
+
         cursor.execute(query, parameters)
-        # print(f"Executing query: {query}")  # Debugging line
-        # print(f"With parameters: {parameters}")  # Debugging line
 
         results = cursor.fetchall()
-        # Convert the sqlite3.Row objects into dictionaries for easy access
-        # records = [dict(row) for row in results]
-
         logger.info(f"Fetched {len(results)} records from {table_name}")
         return results
 
@@ -253,6 +387,33 @@ class SQLiteDB:
             logger.error(f"Error updating record in {table_name}: {e}")
         finally:
             self.close_connection()
+
+    def update_indicator_parameters(self, indicator_id, parameters):
+        """
+        Update indicator parameters in the database for a given indicator.
+        
+        :param indicator_id: The ID of the indicator to update parameters for.
+        :param parameters: A dictionary of parameter names and values to update.
+        """
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+
+            query = """
+                    UPDATE indicator_parameters
+                    SET parameter_value = ?
+                    WHERE indicator_id = ? AND parameter_name = ?
+                """
+            for param_name, param_value in parameters.items():
+                cursor.execute(query, (param_value, indicator_id, param_name))
+
+            self.conn.commit()
+            logger.info(f"Updated indicator parameters for indicator ID {indicator_id}.")
+        except Exception as e:
+            logger.error(f"Error updating indicator parameters: {e}")
+        finally:
+            self.close_connection()
+
 
     def delete_records(self, table_name, where_clause):
         """
