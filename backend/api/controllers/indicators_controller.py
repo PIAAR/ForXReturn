@@ -20,9 +20,11 @@ class IndicatorsController:
         # MongoDB handler to fetch monthly data
         self.mongo_handler = MongoDBHandler(db_name="forex_data")
         
-        # Initialize the YAML config loader
-        self.config_loader = IndicatorConfigLoader()  # Load the YAML file with parameters
-        
+        # Initialize the YAML config loader with a valid path
+        config_path = os.path.join(os.path.dirname(__file__), '../../scripts/yml/indicator_params.yml')
+        self.config_loader = IndicatorConfigLoader(config_path)  # Pass the config path
+        if not os.path.isfile(self.config_path):
+            raise FileNotFoundError(f"YAML Config file not found: {config_path}")
         # Initialize the state machine
         self.state_machine = StateMachine(self.config_loader)
         

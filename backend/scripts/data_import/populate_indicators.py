@@ -18,7 +18,7 @@ def populate_indicators():
     db.initialize_db()
 
     # Path to the YAML file
-    yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '/backend/scripts/yml/indicator_params.yml')
+    yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../yml/indicator_params.yml')
     
     # Load indicators from YAML
     indicators = load_indicators_from_yaml(yaml_file)
