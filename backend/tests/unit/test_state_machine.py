@@ -27,7 +27,12 @@ class TestStateMachine(unittest.TestCase):
         # Initialize the state machine with the config loader
         self.state_machine = StateMachine(self.config_loader, self.db_connection)
 
-    def test_state_machine(self):
+    @patch('backend.data.repositories._sqlite_db.SQLiteDB.fetch_records')
+    @patch('backend.data.repositories._sqlite_db.SQLiteDB.execute_script')
+    def test_state_machine(self, mock_execute_script, mock_fetch_records):
+        # Set up the mock for fetch_records to return a state when queried
+        mock_fetch_records.return_value = [{'state': 'Red'}]
+
         # Simulate some results (1 = favorable, 0 = not favorable)
         indicator_results_macro = {
             'ATR': 1,
@@ -62,15 +67,23 @@ class TestStateMachine(unittest.TestCase):
             'risk_level': 6
         }
 
-        # Run the state machine to evaluate each tier
-        states = self.state_machine.run_state_machine('EUR_USD', indicator_results_by_tier, market_conditions)
+        # Convert instrument name to instrument ID (if necessary in the logic)
+        instrument_id = self.db_connection.get_instrument_id('EUR_USD')
 
-        # Assert that the results match the expected output
-        print(f"States: {states}")  # Debugging line to print states
-        self.assertIn('macro', states)  # Check that 'macro' exists
+        # Run the state machine to evaluate each tier
+        states = self.state_machine.run_state_machine(instrument_id, indicator_results_by_tier, market_conditions)
+
+        # Debug output for states
+        print(f"States: {states}")
+
+        # Assertions to validate the states
+        self.assertIn('macro', states)
         self.assertEqual(states['macro'], 'Red')
         self.assertEqual(states['daily'], 'Red')
         self.assertEqual(states['micro'], 'Red')
+
+        # Ensure the execute_script is called to update states
+        mock_execute_script.assert_called()
 
 if __name__ == '__main__':
     unittest.main()

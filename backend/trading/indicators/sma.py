@@ -11,7 +11,7 @@ class SMA:
         """
         Initialize the SMA class with a SQLiteDB handler.
 
-        :param db_name: The name of the SQLite database file.
+        :parameter db_name: The name of the SQLite database file.
         """
         self.db_handler = SQLiteDB(db_name=db_name)
 
@@ -20,8 +20,8 @@ class SMA:
         """
         Calculate the Simple Moving Average (SMA) for a given DataFrame.
 
-        :param df: DataFrame with 'close' prices.
-        :param period: Lookback period for SMA calculation.
+        :parameter df: DataFrame with 'close' prices.
+        :parameter period: Lookback period for SMA calculation.
         :return: DataFrame with the SMA values.
         """
         # Ensure the necessary 'close' column exists
@@ -45,19 +45,19 @@ class SMA:
         """
         Insert the SMA results into the SQLite database.
 
-        :param indicator_name: The name of the indicator (e.g., 'SMA').
-        :param instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
-        :param result_df: DataFrame containing the calculated SMA values.
-        :param period: Period for which the SMA was calculated.
+        :parameter indicator_name: The name of the indicator (e.g., 'SMA').
+        :parameter instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
+        :parameter result_df: DataFrame containing the calculated SMA values.
+        :parameter period: Period for which the SMA was calculated.
         """
         indicator_id = self.db_handler.get_indicator_id(indicator_name)
         timestamp = datetime.now().isoformat()
 
-        param_name = indicator_name.lower()
+        parameter_name = indicator_name.lower()
         # Insert SMA results row by row
         for _, row in result_df.iterrows():
-            param_value = row[param_name]
-            self.db_handler.add_indicator_results(indicator_id, timestamp, param_name, param_value)
+            parameter_value = row[parameter_name]
+            self.db_handler.add_indicator_results(indicator_id, timestamp, parameter_name, parameter_value)
             self.db_handler.add_indicator_parameters(indicator_id, {'period': period})
 
         logger.info(f"Inserted SMA results for {instrument} into SQLite.")

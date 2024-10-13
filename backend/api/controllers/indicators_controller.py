@@ -50,8 +50,8 @@ class IndicatorsController:
     def fetch_historical_data(self, instrument, granularity="M"):
         """
         Fetch historical data from MongoDB for a given instrument and granularity (monthly data).
-        :param instrument: The instrument to fetch (e.g., "EUR_USD").
-        :param granularity: The time granularity (default is monthly "M").
+        :parameter instrument: The instrument to fetch (e.g., "EUR_USD").
+        :parameter granularity: The time granularity (default is monthly "M").
         :return: Pandas DataFrame of historical data.
         """
         collection_name = f"{instrument.lower()}_{granularity.lower()}_data"
@@ -93,10 +93,10 @@ class IndicatorsController:
     def calculate_indicator(self, indicator_name, df, params, instrument):
         """
         Dynamically load and calculate the indicator values using fetched historical data.
-        :param indicator_name: The name of the indicator file (without .py).
-        :param df: Historical data as a Pandas DataFrame.
-        :param params: Calculation parameters for the indicator.
-        :param instrument: The financial instrument for which the calculation is made (e.g., EUR_USD)
+        :parameter indicator_name: The name of the indicator file (without .py).
+        :parameter df: Historical data as a Pandas DataFrame.
+        :parameter params: Calculation parameters for the indicator.
+        :parameter instrument: The financial instrument for which the calculation is made (e.g., EUR_USD)
         """
         try:
             module_name = f'trading.indicators.{indicator_name[:-3]}'  # Remove the .py extension

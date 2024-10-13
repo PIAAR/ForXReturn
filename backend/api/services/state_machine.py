@@ -20,8 +20,9 @@ class StateMachine:
 
         for indicator_name, result in indicator_results.items():
             logger.info(f"Processing {indicator_name} for {tier}")
-            indicator_params = self.indicator_loader.get_indicator_params(indicator_name, tier)
-            if indicator_params:
+            if indicator_params := self.indicator_loader.get_indicator_params(
+                indicator_name, tier
+            ):
                 weight = indicator_params.get('weight', 1)  # Default to weight 1 if not found
                 weighted_sum += result * weight
                 total_weight += weight
@@ -109,6 +110,7 @@ class StateMachine:
             weighted_score = self.calculate_weighted_score(indicator_results, tier)
             self.evaluate_state(instrument_name, market_conditions, tier, weighted_score)
             state = self.get_current_state(instrument_name, tier)
+            print(f"Tier: {tier}, State: {state}")
             states[tier] = state
 
         return states

@@ -4,8 +4,8 @@ import unittest
 import pandas as pd
 import numpy as np
 from datetime import datetime
-from trading.indicators.sma import SMA
-from trading.optimizers.backtester import Backtester
+from backend.trading.indicators.sma import SMA
+from backend.trading.optimizers.backtester import Backtester
 
 class TestBacktester(unittest.TestCase):
     def setUp(self):

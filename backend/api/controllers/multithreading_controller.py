@@ -16,7 +16,7 @@ class MultithreadingController:
     def __init__(self, max_workers=5):
         """
         Initializes the multithreading controller with a thread pool.
-        :param max_workers: Maximum number of worker threads to run concurrently.
+        :parameter max_workers: Maximum number of worker threads to run concurrently.
         """
         self.executor = ThreadPoolExecutor(max_workers=max_workers)
         self.lock = Lock()  # For thread-safe access to shared resources
@@ -48,9 +48,9 @@ class MultithreadingController:
     def run_backtest(self, strategy_name, instrument, timeframe):
         """
         Schedules a backtest to run in a separate thread.
-        :param strategy_name: Name of the trading strategy.
-        :param instrument: Forex instrument (e.g., 'EUR_USD').
-        :param timeframe: Timeframe to run the backtest on.
+        :parameter strategy_name: Name of the trading strategy.
+        :parameter instrument: Forex instrument (e.g., 'EUR_USD').
+        :parameter timeframe: Timeframe to run the backtest on.
         """
         future = self.executor.submit(self._run_task, self.backtester.run, strategy_name, instrument, timeframe)
         self.futures.append(future)
@@ -58,8 +58,8 @@ class MultithreadingController:
     def run_optimizer(self, instrument, parameters):
         """
         Schedules an optimization task to run in a separate thread.
-        :param instrument: The instrument being optimized.
-        :param parameters: Optimization parameters.
+        :parameter instrument: The instrument being optimized.
+        :parameter parameters: Optimization parameters.
         """
         future = self.executor.submit(self._run_task, self.optimizer.optimize, instrument, parameters)
         self.futures.append(future)

@@ -1,20 +1,20 @@
 import unittest
 import sqlite3
 import pandas as pd
-from threading import Thread
 from backtesting import Backtest, Strategy
-from trading.optimizers.optimizer import Optimizer  # Assuming the optimizer is here
-from trading.indicators.sma import SMA  # Assuming you have an SMA strategy
+from backend.trading.optimizers.optimizer import Optimizer  # Assuming the optimizer is here
+from backend.trading.indicators.sma import SMA  # Assuming you have an SMA strategy
 
 class MockStrategy(Strategy):
     """
     A mock trading strategy to simulate backtesting with SMA.
     """
     def init(self):
-        print(self.data.Close) 
+        # Apply the SMA indicator to the Close price
         self.sma = self.I(SMA.calculate, self.data.Close, 20)
 
     def next(self):
+        # Trading logic based on SMA
         if self.data.Close[-1] > self.sma[-1]:
             self.buy()
         elif self.data.Close[-1] < self.sma[-1]:
@@ -22,7 +22,7 @@ class MockStrategy(Strategy):
 
 class TestOptimizerBacktest(unittest.TestCase):
     def setUp(self):
-        # Set up a temporary SQLite database for testing
+        # Set up an in-memory SQLite database for testing
         self.db_path = ':memory:'
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
@@ -69,12 +69,20 @@ class TestOptimizerBacktest(unittest.TestCase):
 
         # Now, let's run the optimizer and ensure it updates the parameters
         optimizer = Optimizer(self.db_path)
+        
+        # Simulate running the optimization
         optimizer.run_optimization(params={'SMA': 20})
 
         # Check if the parameters in the database were updated
         self.cursor.execute("SELECT value FROM indicator_parameters WHERE key='SMA'")
         updated_value = self.cursor.fetchone()
-        self.assertNotEqual(updated_value, '20')  # Ensure the value was changed by the optimizer
+
+        # Debugging print to check the fetched value
+        print(f"Updated SMA Value in DB: {updated_value}")
+
+        # Ensure the value was changed by the optimizer
+        self.assertIsNotNone(updated_value, "Optimizer did not update the SMA value in the database")
+        self.assertNotEqual(updated_value[0], '20')  # Ensure the value was updated
 
 if __name__ == '__main__':
     unittest.main()

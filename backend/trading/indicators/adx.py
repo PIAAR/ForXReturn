@@ -14,7 +14,7 @@ class ADX:
         """
         Initialize the ADX class with a SQLiteDB handler.
 
-        :param db_name: The name of the SQLite database file.
+        :parameter db_name: The name of the SQLite database file.
         """
         self.db_handler = SQLiteDB(db_name=db_name)
 
@@ -30,8 +30,8 @@ class ADX:
         """
         Calculate the Average Directional Index (ADX) for a given DataFrame.
 
-        :param df: DataFrame with 'high', 'low', and 'close' prices.
-        :param period: Lookback period for ADX calculation.
+        :parameter df: DataFrame with 'high', 'low', and 'close' prices.
+        :parameter period: Lookback period for ADX calculation.
         :return: DataFrame with the ADX values.
         """
         # Ensure the necessary columns exist
@@ -78,10 +78,10 @@ class ADX:
         """
         Insert the ADX results into the SQLite database.
 
-        :param indicator_name: The name of the indicator (e.g., 'ADX').
-        :param instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
-        :param result_df: DataFrame containing the calculated ADX values.
-        :param period: Period for which the ADX was calculated.
+        :parameter indicator_name: The name of the indicator (e.g., 'ADX').
+        :parameter instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
+        :parameter result_df: DataFrame containing the calculated ADX values.
+        :parameter period: Period for which the ADX was calculated.
         """
         indicator_id = self.db_handler.get_indicator_id(indicator_name)
         timestamp = datetime.now().isoformat()

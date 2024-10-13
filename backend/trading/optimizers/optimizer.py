@@ -90,9 +90,9 @@ class Optimizer:
         """
         Save optimized parameters to the SQLite database.
         
-        :param instrument_id: The ID of the financial instrument.
-        :param indicator_id: The ID of the indicator.
-        :param params: Dictionary of the optimized parameters.
+        :parameter instrument_id: The ID of the financial instrument.
+        :parameter indicator_id: The ID of the indicator.
+        :parameter params: Dictionary of the optimized parameters.
         """
         timestamp = datetime.now().isoformat()
 
@@ -101,9 +101,9 @@ class Optimizer:
             return
 
         # Insert the parameters into the database
-        for param_name, param_value in params.items():
+        for parameter_name, parameter_value in params.items():
             try:
-                self.db_handler.add_optimized_params(instrument_id, indicator_id, {param_name: param_value})
+                self.db_handler.add_optimized_params(instrument_id, indicator_id, {parameter_name: parameter_value})
                 logger.info(f"Optimized parameters for indicator {indicator_id} on instrument {instrument_id} saved at {timestamp}.")
             except Exception as e:
                 logger.error(f"Failed to save optimized parameters for indicator {indicator_id}: {e}")
@@ -112,9 +112,9 @@ class Optimizer:
         """
         Store the best-performing parameters in the SQLite database.
         
-        :param instrument_id: The ID of the financial instrument.
-        :param indicator_id: The ID of the indicator.
-        :param params: Dictionary of optimized parameters.
+        :parameter instrument_id: The ID of the financial instrument.
+        :parameter indicator_id: The ID of the indicator.
+        :parameter params: Dictionary of optimized parameters.
         """
         try:
             self.save_optimized_parameters(instrument_id, indicator_id, params)
@@ -125,9 +125,9 @@ class Optimizer:
     def run_optimization(self, indicator_func, data, **kwargs):
         """
         Run optimization for a specific indicator and save results.
-        :param indicator_func: The indicator function to optimize.
-        :param data: The historical data for backtesting.
-        :param kwargs: Optimization parameters to be tested.
+        :parameter indicator_func: The indicator function to optimize.
+        :parameter data: The historical data for backtesting.
+        :parameter kwargs: Optimization parameters to be tested.
         """
         # Run the optimization (this can be extended for more complex optimizations)
         optimized_params = indicator_func(data, **kwargs)

@@ -15,8 +15,8 @@ class MongoDBHandler:
         """
         Initializes the MongoDBHandler with a connection to the specified database and optionally a collection.
 
-        :param db_name: The name of the database to connect to.
-        :param collection_name: The name of the collection to interact with (optional).
+        :parameter db_name: The name of the database to connect to.
+        :parameter collection_name: The name of the collection to interact with (optional).
         """
         self.mongo_url = os.getenv('MONGO_URL', defs.MONGO_URI)
         self.client = MongoDBHandler._get_mongo_client(self.mongo_url)
@@ -47,7 +47,7 @@ class MongoDBHandler:
         """
         Checks if a collection exists in the database.
         
-        :param collection_name: The name of the collection to check.
+        :parameter collection_name: The name of the collection to check.
         :return: True if the collection exists, False otherwise.
         """
         return collection_name in self.db.list_collection_names()
@@ -57,7 +57,7 @@ class MongoDBHandler:
         Switches to a different collection within the same database.
         Creates the collection if it doesn't exist.
         
-        :param collection_name: The name of the collection to switch to.
+        :parameter collection_name: The name of the collection to switch to.
         """
         if self.collection_exists(collection_name) is None:
             self.db.create_collection(collection_name)
@@ -68,7 +68,7 @@ class MongoDBHandler:
     def short_bulk_insert(self, documents):
         """
         Inserts multiple documents into the current collection.
-        :param documents: A list of documents to insert.
+        :parameter documents: A list of documents to insert.
         """
         try:
             if documents:
@@ -83,7 +83,7 @@ class MongoDBHandler:
     def long_bulk_insert(self, documents):
         """
         Inserts multiple documents into the current collection, printing each document inserted.
-        :param documents: A list of documents to insert.
+        :parameter documents: A list of documents to insert.
         """
         try:
             if documents:
@@ -102,7 +102,7 @@ class MongoDBHandler:
         """
         Creates a new collection within the database.
 
-        :param collection_name: The name of the collection to create.
+        :parameter collection_name: The name of the collection to create.
         :return: The created collection object.
         """
         try:
@@ -117,7 +117,7 @@ class MongoDBHandler:
         """
         Drops a collection from the database.
 
-        :param collection_name: The name of the collection to drop.
+        :parameter collection_name: The name of the collection to drop.
         """
         try:
             self.db.drop_collection(collection_name)
@@ -130,7 +130,7 @@ class MongoDBHandler:
         """
         Creates a new database. In MongoDB, databases are created on demand by using them.
 
-        :param db_name: The name of the database to create.
+        :parameter db_name: The name of the database to create.
         :return: The created database object.
         """
         try:
@@ -147,7 +147,7 @@ class MongoDBHandler:
         """
         Drops a database.
 
-        :param db_name: The name of the database to drop.
+        :parameter db_name: The name of the database to drop.
         """
         try:
             self.client.drop_database(db_name)
@@ -160,7 +160,7 @@ class MongoDBHandler:
         """
         Inserts a single document into the collection.
 
-        :param document: A dictionary representing the document to insert.
+        :parameter document: A dictionary representing the document to insert.
         :return: The inserted ID of the document.
         """
         try:
@@ -178,8 +178,8 @@ class MongoDBHandler:
         """
         Reads documents from the collection.
 
-        :param query: A dictionary representing the query to match documents.
-        :param collection_name: The name of the collection to read from.
+        :parameter query: A dictionary representing the query to match documents.
+        :parameter collection_name: The name of the collection to read from.
         :return: A list of matched documents.
         """
         if not collection_name:
@@ -199,8 +199,8 @@ class MongoDBHandler:
         """
         Updates documents in the collection based on a query.
 
-        :param query: A dictionary representing the query to match documents.
-        :param update_values: A dictionary representing the update values.
+        :parameter query: A dictionary representing the query to match documents.
+        :parameter update_values: A dictionary representing the update values.
         :return: The count of documents updated.
         """
         try:
@@ -215,7 +215,7 @@ class MongoDBHandler:
         """
         Deletes documents from the collection based on a query.
 
-        :param query: A dictionary representing the query to match documents.
+        :parameter query: A dictionary representing the query to match documents.
         :return: The count of documents deleted.
         """
         try:
@@ -254,9 +254,9 @@ class MongoDBHandler:
         """
         Ensure the MongoDB collection exists and populate it with historical data.
 
-        :param instrument: The forex pair (e.g., "EUR_USD").
-        :param granularity: The timeframe (e.g., "M1", "D", "H1").
-        :param count: The number of data points to fetch.
+        :parameter instrument: The forex pair (e.g., "EUR_USD").
+        :parameter granularity: The timeframe (e.g., "M1", "D", "H1").
+        :parameter count: The number of data points to fetch.
         """
         try:
             # Prepare collection name based on instrument and granularity
@@ -276,8 +276,8 @@ class MongoDBHandler:
         """
         Creates a new collection with an index on a specific field if it doesn't already exist.
         
-        :param collection_name: The name of the collection to create.
-        :param index_field: The field to index (default is 'time').
+        :parameter collection_name: The name of the collection to create.
+        :parameter index_field: The field to index (default is 'time').
         """
         if collection_name not in self.db.list_collection_names():
             # Create the collection
@@ -295,9 +295,9 @@ class MongoDBHandler:
     def populate_historical_data(self, instrument, granularity="D", count=5000):
         """
         Fetch and store historical data for a given forex instrument.
-        :param instrument: The forex pair (e.g., "EUR_USD").
-        :param granularity: The timeframe (e.g., "M1", "D", "H1").
-        :param count: The number of data points to fetch.
+        :parameter instrument: The forex pair (e.g., "EUR_USD").
+        :parameter granularity: The timeframe (e.g., "M1", "D", "H1").
+        :parameter count: The number of data points to fetch.
         """
         try:
             # Ensure the instrument symbol is in uppercase, as expected by the OANDA API
@@ -339,10 +339,10 @@ class MongoDBHandler:
     def populate_sqlite_from_mongo(self, sqlite_db, collection_name, instrument, granularity):
         """
         Populate data from MongoDB to SQLite for backtesting.
-        :param sqlite_db: The SQLite database object to insert data into.
-        :param collection_name: The name of the MongoDB collection to fetch data from.
-        :param instrument: The forex pair (e.g., 'EUR_USD').
-        :param granularity: The timeframe (e.g., 'D', 'M1', 'H1').
+        :parameter sqlite_db: The SQLite database object to insert data into.
+        :parameter collection_name: The name of the MongoDB collection to fetch data from.
+        :parameter instrument: The forex pair (e.g., 'EUR_USD').
+        :parameter granularity: The timeframe (e.g., 'D', 'M1', 'H1').
         """
         data = self.read({}, collection_name=collection_name)  # Fetch all data from MongoDB
 

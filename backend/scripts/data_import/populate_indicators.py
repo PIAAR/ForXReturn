@@ -46,20 +46,20 @@ def populate_indicators():
             # Insert the weight as a parameter in the indicator_parameters table
             db.add_record("indicator_parameters", {
                 "indicator_id": indicator_id,
-                "param_name": f"{timeframe}_weight",
-                "param_type": "float",  # Assuming weight is a float
+                "parameter_name": f"{timeframe}_weight",
+                "parameter_type": "float",  # Assuming weight is a float
                 "default_value": str(weight)
             })
 
             # Insert other parameters into the indicator_parameters table
-            for param_name, param_value in params_data.items():
-                if param_name != 'weight':  # Skip weight since it's handled separately
-                    param_type = "float" if isinstance(param_value, (int, float)) else "text"
+            for parameter_name, parameter_value in params_data.items():
+                if parameter_name != 'weight':  # Skip weight since it's handled separately
+                    parameter_type = "float" if isinstance(parameter_value, (int, float)) else "text"
                     db.add_record("indicator_parameters", {
                         "indicator_id": indicator_id,
-                        "param_name": f"{timeframe}_{param_name}",  # Prefix param with timeframe
-                        "param_type": param_type,
-                        "default_value": str(param_value)  # Convert the value to a string
+                        "parameter_name": f"{timeframe}_{parameter_name}",  # Prefix parameter with timeframe
+                        "parameter_type": parameter_type,
+                        "default_value": str(parameter_value)  # Convert the value to a string
                     })
 
     print("Indicators and parameters populated successfully.")

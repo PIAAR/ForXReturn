@@ -34,38 +34,38 @@ def populate_sample_data():
     # Insert parameters for RSI, ATR, Bollinger Bands, and MA Crossover indicators
     indicators_db.add_record("indicator_parameters", {
         "indicator_id": rsi_id,
-        "param_name": "period",
-        "param_type": "integer",
+        "parameter_name": "period",
+        "parameter_type": "integer",
         "default_value": "14"
     })
     indicators_db.add_record("indicator_parameters", {
         "indicator_id": atr_id,
-        "param_name": "period",
-        "param_type": "integer",
+        "parameter_name": "period",
+        "parameter_type": "integer",
         "default_value": "14"
     })
     indicators_db.add_record("indicator_parameters", {
         "indicator_id": bb_id,
-        "param_name": "period",
-        "param_type": "integer",
+        "parameter_name": "period",
+        "parameter_type": "integer",
         "default_value": "20"
     })
     indicators_db.add_record("indicator_parameters", {
         "indicator_id": bb_id,
-        "param_name": "std",
-        "param_type": "float",
+        "parameter_name": "std",
+        "parameter_type": "float",
         "default_value": "2.0"
     })
     indicators_db.add_record("indicator_parameters", {
         "indicator_id": ma_crossover_id,
-        "param_name": "fast_period",
-        "param_type": "integer",
+        "parameter_name": "fast_period",
+        "parameter_type": "integer",
         "default_value": "12"
     })
     indicators_db.add_record("indicator_parameters", {
         "indicator_id": ma_crossover_id,
-        "param_name": "slow_period",
-        "param_type": "integer",
+        "parameter_name": "slow_period",
+        "parameter_type": "integer",
         "default_value": "26"
     })
 
@@ -96,22 +96,22 @@ def populate_sample_data():
     indicators_db.add_record("instrument_indicator_results", {
         "instrument_id": eur_usd_id,
         "indicator_id": rsi_id,
-        "param_name": "RSI",
-        "param_value": 60,
+        "parameter_name": "RSI",
+        "parameter_value": 60,
         "timestamp": "2023-09-30 12:45:00"
     })
     indicators_db.add_record("instrument_indicator_results", {
         "instrument_id": eur_usd_id,
         "indicator_id": bb_id,
-        "param_name": "BollingerBands",
-        "param_value": 1.5,
+        "parameter_name": "BollingerBands",
+        "parameter_value": 1.5,
         "timestamp": "2023-09-30 12:45:00"
     })
     indicators_db.add_record("instrument_indicator_results", {
         "instrument_id": eur_usd_id,
         "indicator_id": ma_crossover_id,
-        "param_name": "MACrossover",
-        "param_value": 1,
+        "parameter_name": "MACrossover",
+        "parameter_value": 1,
         "timestamp": "2023-09-30 12:45:00"
     })
 

@@ -10,7 +10,7 @@ class MACD:
         """
         Initialize the MACD class with a SQLiteDB handler.
         
-        :param db_name: The name of the SQLite database file.
+        :parameter db_name: The name of the SQLite database file.
         """
         self.db_handler = SQLiteDB(db_name=db_name)
 
@@ -19,10 +19,10 @@ class MACD:
         """
         Calculate the Moving Average Convergence Divergence (MACD) for a given DataFrame.
 
-        :param df: DataFrame with 'close' prices.
-        :param short_period: Lookback period for the short-term EMA.
-        :param long_period: Lookback period for the long-term EMA.
-        :param signal_period: Lookback period for the signal line.
+        :parameter df: DataFrame with 'close' prices.
+        :parameter short_period: Lookback period for the short-term EMA.
+        :parameter long_period: Lookback period for the long-term EMA.
+        :parameter signal_period: Lookback period for the signal line.
         :return: DataFrame with the MACD, signal, and histogram values.
         """
         # Ensure the necessary 'close' column exists
@@ -53,12 +53,12 @@ class MACD:
         """
         Insert the MACD results into the SQLite database.
 
-        :param indicator_name: The name of the indicator (e.g., 'MACD').
-        :param instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
-        :param result_df: DataFrame containing the calculated MACD values.
-        :param short_period: Short period for MACD calculation.
-        :param long_period: Long period for MACD calculation.
-        :param signal_period: Signal period for MACD calculation.
+        :parameter indicator_name: The name of the indicator (e.g., 'MACD').
+        :parameter instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
+        :parameter result_df: DataFrame containing the calculated MACD values.
+        :parameter short_period: Short period for MACD calculation.
+        :parameter long_period: Long period for MACD calculation.
+        :parameter signal_period: Signal period for MACD calculation.
         """
         indicator_id = self.db_handler.get_indicator_id(indicator_name)
         timestamp = datetime.now().isoformat()

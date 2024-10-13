@@ -4,7 +4,7 @@ class IndicatorConfigLoader:
     def __init__(self, config_path):
         """
         Load the YAML configuration file.
-        :param config_path: Path to the YAML config file.
+        :parameter config_path: Path to the YAML config file.
         """
         try:
             with open(config_path, 'r') as file:

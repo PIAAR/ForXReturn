@@ -16,7 +16,7 @@ class Aroon:
         """
         Initialize the Aroon class with a SQLiteDB handler.
 
-        :param db_name: The name of the SQLite database file.
+        :parameter db_name: The name of the SQLite database file.
         """
         self.db_handler = SQLiteDB(db_name=db_name)
 
@@ -25,8 +25,8 @@ class Aroon:
         """
         Calculate the Aroon Up and Aroon Down indicators for a given DataFrame.
 
-        :param df: DataFrame with 'high' and 'low' prices.
-        :param period: Lookback period for Aroon calculation.
+        :parameter df: DataFrame with 'high' and 'low' prices.
+        :parameter period: Lookback period for Aroon calculation.
         :return: DataFrame with the Aroon Up and Aroon Down values.
         """
         # Ensure the necessary columns exist
@@ -49,10 +49,10 @@ class Aroon:
         """
         Insert the Aroon results into the SQLite database.
 
-        :param indicator_name: The name of the indicator (e.g., 'Aroon').
-        :param instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
-        :param result_df: DataFrame containing the calculated Aroon values.
-        :param period: Period for which the Aroon was calculated.
+        :parameter indicator_name: The name of the indicator (e.g., 'Aroon').
+        :parameter instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
+        :parameter result_df: DataFrame containing the calculated Aroon values.
+        :parameter period: Period for which the Aroon was calculated.
         """
         indicator_id = self.db_handler.get_indicator_id(indicator_name)
         timestamp = datetime.now().isoformat()

@@ -33,9 +33,9 @@ class DataPopulationService:
         """
         Ensure the MongoDB collection exists and populate it with historical data.
 
-        :param instrument: The forex pair (e.g., "EUR_USD").
-        :param granularity: The timeframe (e.g., "M1", "D", "H1").
-        :param count: The number of data points to fetch.
+        :parameter instrument: The forex pair (e.g., "EUR_USD").
+        :parameter granularity: The timeframe (e.g., "M1", "D", "H1").
+        :parameter count: The number of data points to fetch.
         """
         try:
             # Ensure the instrument symbol is always lowercase

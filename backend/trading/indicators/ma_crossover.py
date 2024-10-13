@@ -12,7 +12,7 @@ class MACrossover:
         """
         Initialize the MACrossover class with a SQLiteDB handler.
 
-        :param db_name: The name of the SQLite database file.
+        :parameter db_name: The name of the SQLite database file.
         """
         self.db_handler = SQLiteDB(db_name=db_name)
 
@@ -21,9 +21,9 @@ class MACrossover:
         """
         Calculate the Moving Average Crossover for a given DataFrame.
 
-        :param df: DataFrame with 'close' prices.
-        :param fast_period: Lookback period for the fast moving average.
-        :param slow_period: Lookback period for the slow moving average.
+        :parameter df: DataFrame with 'close' prices.
+        :parameter fast_period: Lookback period for the fast moving average.
+        :parameter slow_period: Lookback period for the slow moving average.
         :return: DataFrame with the fast and slow moving averages and the crossover signal.
         """
         # Ensure the necessary 'close' column exists
@@ -51,20 +51,20 @@ class MACrossover:
         """
         Insert the MA Crossover results into the SQLite database.
 
-        :param indicator_name: The name of the indicator (e.g., 'MACrossover').
-        :param instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
-        :param result_df: DataFrame containing the calculated MA crossover values.
-        :param fast_period: Period for the fast moving average.
-        :param slow_period: Period for the slow moving average.
+        :parameter indicator_name: The name of the indicator (e.g., 'MACrossover').
+        :parameter instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
+        :parameter result_df: DataFrame containing the calculated MA crossover values.
+        :parameter fast_period: Period for the fast moving average.
+        :parameter slow_period: Period for the slow moving average.
         """
         indicator_id = self.db_handler.get_indicator_id(indicator_name)
         timestamp = datetime.now().isoformat()
 
-        param_name = 'ma_crossover'
+        parameter_name = 'ma_crossover'
         # Insert MA Crossover results row by row
         for _, row in result_df.iterrows():
-            param_value = row['crossover_signal']
-            self.db_handler.add_indicator_results(indicator_id, timestamp, param_name, param_value)
+            parameter_value = row['crossover_signal']
+            self.db_handler.add_indicator_results(indicator_id, timestamp, parameter_name, parameter_value)
             self.db_handler.add_indicator_parameters(indicator_id, {'fast_period': fast_period, 'slow_period': slow_period})
 
         logger.info(f"Inserted MA Crossover results for {instrument} into SQLite.")

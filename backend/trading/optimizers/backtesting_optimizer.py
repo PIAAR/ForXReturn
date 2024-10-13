@@ -12,8 +12,8 @@ class Backtester:
     def backtest_indicator(self, indicator_strategy, data):
         """
         Backtests a given strategy using Backtesting.py and returns the performance metrics.
-        :param indicator_strategy: The strategy class to be backtested (inherits from Backtesting.py's Strategy).
-        :param data: DataFrame containing historical data for backtesting.
+        :parameter indicator_strategy: The strategy class to be backtested (inherits from Backtesting.py's Strategy).
+        :parameter data: DataFrame containing historical data for backtesting.
         :return: Results of the backtest including metrics like Sharpe ratio, total return, etc.
         """
         bt = Backtest(data, indicator_strategy, cash=10000, commission=0.002)
@@ -22,7 +22,7 @@ class Backtester:
     def fetch_indicator_params(self, indicator_name):
         """
         Fetch the parameters for a given indicator from the SQLite database.
-        :param indicator_name: The name of the indicator.
+        :parameter indicator_name: The name of the indicator.
         :return: Dictionary of parameters for the indicator.
         """
         self.cursor.execute("SELECT key, value FROM indicator_parameters WHERE indicator_id = (SELECT id FROM indicators WHERE name=?)", (indicator_name,))
@@ -31,8 +31,8 @@ class Backtester:
     def update_parameters_in_db(self, indicator_name, optimized_params):
         """
         Update the optimized parameters for a given indicator in the SQLite database.
-        :param indicator_name: The name of the indicator.
-        :param optimized_params: Dictionary of optimized parameters.
+        :parameter indicator_name: The name of the indicator.
+        :parameter optimized_params: Dictionary of optimized parameters.
         """
         for key, value in optimized_params.items():
             self.cursor.execute(
@@ -44,9 +44,9 @@ class Backtester:
     def run_backtest_and_optimize(self, indicator_name, strategy_class, data):
         """
         Runs a backtest on a strategy, optimizes its parameters, and updates the database.
-        :param indicator_name: The name of the indicator (e.g., 'SMA').
-        :param strategy_class: The strategy class for the indicator.
-        :param data: Data for the backtest.
+        :parameter indicator_name: The name of the indicator (e.g., 'SMA').
+        :parameter strategy_class: The strategy class for the indicator.
+        :parameter data: Data for the backtest.
         """
         # 1. Fetch current parameters from DB
         params = self.fetch_indicator_params(indicator_name)
@@ -66,17 +66,17 @@ class Backtester:
     def optimize_parameters(self, params, stats):
         """
         Optimizes parameters based on backtest results (e.g., Sharpe ratio).
-        :param params: The original parameters.
-        :param stats: Backtest statistics (e.g., Sharpe ratio, total return).
+        :parameter params: The original parameters.
+        :parameter stats: Backtest statistics (e.g., Sharpe ratio, total return).
         :return: Optimized parameters.
         """
         return {
-            param: (
+            parameter: (
                 float(value) * 1.1
                 if stats['Sharpe Ratio'] > 1
                 else float(value) * 0.9
             )
-            for param, value in params.items()
+            for parameter, value in params.items()
         }
 
 

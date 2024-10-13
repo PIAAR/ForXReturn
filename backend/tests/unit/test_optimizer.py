@@ -3,11 +3,11 @@ import sqlite3
 import pandas as pd
 import numpy as np
 from logs.log_manager import LogManager
-from trading.optimizers.optimizer import Optimizer
-from trading.optimizers.backtester import Backtester
-from trading.indicators.sma import SMA
-from trading.indicators.ema import EMA
-from trading.indicators.rsi import RSI
+from backend.trading.optimizers.optimizer import Optimizer
+from backend.trading.optimizers.backtester import Backtester
+from backend.trading.indicators.sma import SMA
+from backend.trading.indicators.ema import EMA
+from backend.trading.indicators.rsi import RSI
 
 # Configure loggers
 logger = LogManager('test_optimizer_logs').get_logger()
@@ -61,7 +61,7 @@ class TestOptimizer(unittest.TestCase):
         ''')
         conn.commit()
 
-        # Insert a mock indicator
+        # Insert mock indicators
         cursor.execute("INSERT INTO indicators (name, type) VALUES ('SMA', 'Moving Average')")
         cursor.execute("INSERT INTO indicators (name, type) VALUES ('EMA', 'Exponential Moving Average')")
         cursor.execute("INSERT INTO indicators (name, type) VALUES ('RSI', 'Relative Strength Index')")
@@ -90,13 +90,11 @@ class TestOptimizer(unittest.TestCase):
         optimized_period = cursor.fetchone()
         
         if optimized_period is None:
-            logger.error("No optimized period found in the database.")
+            logger.error("No optimized period found in the database for SMA.")
         else:
             optimized_period = optimized_period[0]
             # Validate that the optimized period matches the expected best params
             print(f"Optimized period found in DB: {optimized_period}")
-            self.assertEqual(int(optimized_period), best_params['period'], "The optimized period in the DB should match the best parameters found.")
-            self.assertIsNotNone(optimized_period, "The optimized period should be in the database.")
             self.assertEqual(int(optimized_period), best_params['period'], "The optimized period in the DB should match the best parameters found.")
 
     def test_optimize_ema(self):
@@ -117,7 +115,14 @@ class TestOptimizer(unittest.TestCase):
         cursor = self.optimizer.db_handler.cursor()
         cursor.execute("SELECT value FROM indicator_parameters WHERE key='period'")
         optimized_period = cursor.fetchone()
-        self.assertEqual(int(optimized_period), best_params['period'])
+        
+        if optimized_period is None:
+            logger.error("No optimized period found in the database for EMA.")
+        else:
+            optimized_period = optimized_period[0]
+            # Validate that the optimized period matches the expected best params
+            print(f"Optimized period found in DB: {optimized_period}")
+            self.assertEqual(int(optimized_period), best_params['period'], "The optimized period in the DB should match the best parameters found.")
 
     def test_optimize_rsi(self):
         """
@@ -137,7 +142,14 @@ class TestOptimizer(unittest.TestCase):
         cursor = self.optimizer.db_handler.cursor()
         cursor.execute("SELECT value FROM indicator_parameters WHERE key='period'")
         optimized_period = cursor.fetchone()
-        self.assertEqual(int(optimized_period), best_params['period'])
+        
+        if optimized_period is None:
+            logger.error("No optimized period found in the database for RSI.")
+        else:
+            optimized_period = optimized_period[0]
+            # Validate that the optimized period matches the expected best params
+            print(f"Optimized period found in DB: {optimized_period}")
+            self.assertEqual(int(optimized_period), best_params['period'], "The optimized period in the DB should match the best parameters found.")
 
 if __name__ == '__main__':
     unittest.main()

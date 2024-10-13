@@ -6,7 +6,7 @@ class LogManager:
         """
         Initializes the LogManager with a specific logging area.
         
-        :param area: The area for which to create a logger (e.g., 'oanda_logs', 'controller_logs').
+        :parameter area: The area for which to create a logger (e.g., 'oanda_logs', 'controller_logs').
         """
         self.area = area
         self.logger = self._setup_logger()

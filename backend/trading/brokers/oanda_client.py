@@ -10,7 +10,7 @@ class OandaClient:
         """
         Initializes the OandaClient with the provided environment.
 
-        :param environment: The trading environment to use ('live' or 'practice').
+        :parameter environment: The trading environment to use ('live' or 'practice').
         """
         self.environment = environment
         self.base_url = defs.OANDA_URL_D if environment == 'practice' else defs.OANDA_URL_L
@@ -36,7 +36,7 @@ class OandaClient:
         """
         Places a new order with OANDA.
 
-        :param order_data: A dictionary containing order details.
+        :parameter order_data: A dictionary containing order details.
         :return: A dictionary containing the response from OANDA.
         """
         url = f'{self.base_url}/accounts/{self.account_id}/orders'
@@ -82,9 +82,9 @@ class OandaClient:
         """
         Retrieves historical candle data for a specific instrument from OANDA.
 
-        :param instrument: The instrument to retrieve candle data for (e.g., 'EUR_USD').
-        :param granularity: The granularity of the candle data (e.g., 'M1', 'D').
-        :param count: The number of candles to retrieve.
+        :parameter instrument: The instrument to retrieve candle data for (e.g., 'EUR_USD').
+        :parameter granularity: The granularity of the candle data (e.g., 'M1', 'D').
+        :parameter count: The number of candles to retrieve.
         :return: A list of candle data.
         """
         url = f'{self.base_url}/instruments/{instrument}/candles'

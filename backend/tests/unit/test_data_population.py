@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from api.services.data_population_service import DataPopulationService
+from backend.api.services.data_population_service import DataPopulationService
 
 class TestDataPopulationService(unittest.TestCase):
 
@@ -37,7 +37,7 @@ class TestDataPopulationService(unittest.TestCase):
         data_population_service.mongo_handler.populate_historical_data("EUR_USD", "M1", 500)
 
         # Assert that short_bulk_insert was called
-        # mock_mongo_handler_instance.short_bulk_insert.assert_called_once()
+        mock_mongo_handler_instance.short_bulk_insert.assert_called_once()
 
         # Ensure that the correct data is passed to bulk_insert
         args, kwargs = mock_mongo_handler_instance.short_bulk_insert.call_args

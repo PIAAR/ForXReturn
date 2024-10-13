@@ -25,8 +25,8 @@ def teardown_strategy():
 def calculate_rsi(df, period=14):
     """
     Calculates the RSI (Relative Strength Index) on the provided DataFrame.
-    :param df: Pandas DataFrame containing historical data.
-    :param period: Period for RSI calculation.
+    :parameter df: Pandas DataFrame containing historical data.
+    :parameter period: Period for RSI calculation.
     :return: DataFrame with the RSI values.
     """
     rsi_calculator = RSI()
@@ -36,8 +36,8 @@ def calculate_rsi(df, period=14):
 def calculate_sma(df, period=20):
     """
     Calculates the SMA (Simple Moving Average) on the provided DataFrame.
-    :param df: Pandas DataFrame containing historical data.
-    :param period: Period for SMA calculation.
+    :parameter df: Pandas DataFrame containing historical data.
+    :parameter period: Period for SMA calculation.
     :return: DataFrame with the SMA values.
     """
     sma_calculator = SMA()
@@ -47,7 +47,7 @@ def calculate_sma(df, period=20):
 def simple_moving_average_strategy(df):
     """
     Example strategy using Simple Moving Average (SMA).
-    :param df: Pandas DataFrame containing historical data.
+    :parameter df: Pandas DataFrame containing historical data.
     :return: DataFrame with the strategy signals.
     """
     # Example logic for a basic SMA crossover strategy
@@ -59,8 +59,8 @@ def simple_moving_average_strategy(df):
 def apply_strategy(df, indicator_params):
     """
     Applies the specified trading strategy by calculating indicators and generating signals.
-    :param df: Pandas DataFrame containing historical data.
-    :param indicator_params: Dictionary containing indicator parameters (e.g., 'rsi_period', 'sma_period').
+    :parameter df: Pandas DataFrame containing historical data.
+    :parameter indicator_params: Dictionary containing indicator parameters (e.g., 'rsi_period', 'sma_period').
     :return: DataFrame with applied strategy and signals.
     """
     # Fetch indicator parameters from the input (use defaults if not provided)

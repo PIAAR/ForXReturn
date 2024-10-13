@@ -11,15 +11,15 @@ class WilliamsR:
         """
         Initialize the Williams %R class with a SQLiteDB handler.
 
-        :param db_name: The name of the SQLite database file.
+        :parameter db_name: The name of the SQLite database file.
         """
         self.db_handler = SQLiteDB(db_name=db_name)
 
         """
         Calculate the Williams %R for a given DataFrame.
 
-        :param df: DataFrame with 'high', 'low', 'close' prices.
-        :param period: Period for Williams %R calculation.
+        :parameter df: DataFrame with 'high', 'low', 'close' prices.
+        :parameter period: Period for Williams %R calculation.
         :return: DataFrame with Williams %R values.
         """
     @staticmethod
@@ -27,8 +27,8 @@ class WilliamsR:
         """
         Calculate the Williams %R for the given DataFrame.
         
-        :param df: DataFrame with 'high', 'low', and 'close' prices.
-        :param period: The lookback period for Williams %R calculation.
+        :parameter df: DataFrame with 'high', 'low', and 'close' prices.
+        :parameter period: The lookback period for Williams %R calculation.
         :return: DataFrame with the Williams %R values.
         """
         # Ensure the necessary columns exist
@@ -52,19 +52,19 @@ class WilliamsR:
         """
         Insert the Williams %R results into the SQLite database.
 
-        :param indicator_name: The name of the indicator (e.g., 'Williams %R').
-        :param instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
-        :param result_df: DataFrame containing the calculated Williams %R values.
-        :param period: Period for which the Williams %R was calculated.
+        :parameter indicator_name: The name of the indicator (e.g., 'Williams %R').
+        :parameter instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
+        :parameter result_df: DataFrame containing the calculated Williams %R values.
+        :parameter period: Period for which the Williams %R was calculated.
         """
         indicator_id = self.db_handler.get_indicator_id(indicator_name)
         timestamp = datetime.now().isoformat()
 
-        param_name = 'williams_r'
+        parameter_name = 'williams_r'
         # Insert Williams %R results row by row
         for _, row in result_df.iterrows():
-            param_value = row[param_name]
-            self.db_handler.add_indicator_results(indicator_id, timestamp, param_name, param_value)
+            parameter_value = row[parameter_name]
+            self.db_handler.add_indicator_results(indicator_id, timestamp, parameter_name, parameter_value)
             self.db_handler.add_indicator_parameters(indicator_id, {'period': period})
 
         logger.info(f"Inserted Williams %R results for {instrument} into SQLite.")

@@ -10,7 +10,7 @@ class SQLiteDB:
     def __init__(self, db_name):
         """
         Initializes the SQLiteDB class with the specified database.
-        :param db_name: The name of the database (e.g., indicators.db, configuration.db).
+        :parameter db_name: The name of the database (e.g., indicators.db, configuration.db).
         """
         base_dir = os.path.dirname(os.path.abspath(__file__))
         self.db_path = os.path.join(base_dir, "databases", db_name)
@@ -82,7 +82,7 @@ class SQLiteDB:
     def initialize_db(self, schema_sql=None):
         """
         Initialize the database using the appropriate schema or provided schema_sql.
-        :param schema_sql: The SQL script for creating the necessary tables (optional).
+        :parameter schema_sql: The SQL script for creating the necessary tables (optional).
         """
         if schema_sql:
             self.execute_script(schema_sql)
@@ -94,7 +94,7 @@ class SQLiteDB:
     def get_instrument_id(self, instrument_name):
         """
         Retrieve the instrument ID from the `instruments` table based on the instrument name.
-        :param instrument_name: The name of the instrument (e.g., 'EUR_USD').
+        :parameter instrument_name: The name of the instrument (e.g., 'EUR_USD').
         :return: Instrument ID if found, otherwise None.
         """
         try:
@@ -119,7 +119,7 @@ class SQLiteDB:
     def get_indicator_id(self, indicator_name):
         """
         Retrieve the indicator ID from the `indicators` table based on the indicator name.
-        :param indicator_name: The name of the indicator (e.g., 'SMA').
+        :parameter indicator_name: The name of the indicator (e.g., 'SMA').
         :return: Indicator ID if found, otherwise None.
         """
         try:
@@ -145,7 +145,7 @@ class SQLiteDB:
         """
         Retrieve the parameters for a given indicator from the database.
 
-        :param indicator_id: The ID of the indicator to retrieve parameters for.
+        :parameter indicator_id: The ID of the indicator to retrieve parameters for.
         :return: A dictionary of parameter names and their values.
         """
         try:
@@ -175,7 +175,7 @@ class SQLiteDB:
         """
         Retrieve the results for a given indicator from the database.
 
-        :param indicator_id: The ID of the indicator to retrieve results for.
+        :parameter indicator_id: The ID of the indicator to retrieve results for.
         :return: A list of dictionaries containing result data.
         """
         try:
@@ -204,8 +204,8 @@ class SQLiteDB:
     def add_indicator(self, name, indicator_type):
         """
         Add a new indicator to the indicators table.
-        :param name: Name of the indicator (e.g., 'SMA').
-        :param indicator_type: The type of indicator (e.g., 'volatility', 'trend', etc.).
+        :parameter name: Name of the indicator (e.g., 'SMA').
+        :parameter indicator_type: The type of indicator (e.g., 'volatility', 'trend', etc.).
         """
         try:
             self._connect_db()
@@ -228,8 +228,8 @@ class SQLiteDB:
     def add_indicator_parameters(self, indicator_id, params):
             """
             Add or update indicator parameters in the database.
-            :param indicator_id: The ID of the indicator.
-            :param params: A dictionary of parameters to be added or updated (e.g., {'period': 14, 'multiplier': 1.5}).
+            :parameter indicator_id: The ID of the indicator.
+            :parameter params: A dictionary of parameters to be added or updated (e.g., {'period': 14, 'multiplier': 1.5}).
             """
             try:
                 self._connect_db()
@@ -244,8 +244,8 @@ class SQLiteDB:
                     last_updated = excluded.last_updated
                 """
                 timestamp = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                for param_name, param_value in params.items():
-                    cursor.execute(query, (indicator_id, param_name, param_value, timestamp))
+                for parameter_name, parameter_value in params.items():
+                    cursor.execute(query, (indicator_id, parameter_name, parameter_value, timestamp))
 
                 self.conn.commit()
                 logger.info(f"Parameters for indicator ID {indicator_id} updated: {params}")
@@ -257,10 +257,10 @@ class SQLiteDB:
     def add_indicator_results(self, indicator_id, timestamp, result_name, result_value):
         """
         Insert indicator results into the indicator_results table.
-        :param indicator_id: The ID of the indicator (from the indicators table).
-        :param timestamp: The timestamp for when the result was calculated.
-        :param result_name: The name of the result (e.g., 'atr_value').
-        :param result_value: The value of the result (e.g., 1.23).
+        :parameter indicator_id: The ID of the indicator (from the indicators table).
+        :parameter timestamp: The timestamp for when the result was calculated.
+        :parameter result_name: The name of the result (e.g., 'atr_value').
+        :parameter result_value: The value of the result (e.g., 1.23).
         """
         try:
             self._connect_db()
@@ -282,8 +282,8 @@ class SQLiteDB:
     def add_record(self, table_name, data):
         """
         Insert a record dynamically into the specified table.
-        :param table_name: The name of the table.
-        :param data: A dictionary with column names as keys and corresponding values.
+        :parameter table_name: The name of the table.
+        :parameter data: A dictionary with column names as keys and corresponding values.
         """
         try:
             return self.add_record_to_the_database(data, table_name)
@@ -309,9 +309,9 @@ class SQLiteDB:
     def add_optimized_params(self, instrument_id, indicator_id, params):
         """
         Insert optimized parameters into the optimized_parameters table.
-        :param instrument_id: The instrument ID (from instruments table).
-        :param indicator_id: The indicator ID (from indicators table).
-        :param params: A dictionary of the optimized parameters.
+        :parameter instrument_id: The instrument ID (from instruments table).
+        :parameter indicator_id: The indicator ID (from indicators table).
+        :parameter params: A dictionary of the optimized parameters.
         """
         try:
             self._connect_db()
@@ -321,9 +321,9 @@ class SQLiteDB:
                     INSERT INTO optimized_parameters (instrument_id, indicator_id, parameter_name, parameter_value, timestamp)
                     VALUES (?, ?, ?, ?, ?)
                     """
-            for param_name, param_value in params.items():
+            for parameter_name, parameter_value in params.items():
                 timestamp = datetime.datetime.now().isoformat()
-                cursor.execute(query, (instrument_id, indicator_id, param_name, param_value, timestamp))
+                cursor.execute(query, (instrument_id, indicator_id, parameter_name, parameter_value, timestamp))
 
             self.conn.commit()
             logger.info("Optimized parameters added to the database.")
@@ -335,8 +335,8 @@ class SQLiteDB:
     def fetch_records(self, table_name, where_clause=None):
         """
         Retrieve records dynamically from the specified table.
-        :param table_name: The name of the table.
-        :param where_clause: A dictionary for the WHERE clause to filter results (optional).
+        :parameter table_name: The name of the table.
+        :parameter where_clause: A dictionary for the WHERE clause to filter results (optional).
         :return: Fetched records or an empty list.
         """
         try:
@@ -367,9 +367,9 @@ class SQLiteDB:
     def update_record(self, table_name, data, where_clause):
         """
         Update records dynamically in the specified table.
-        :param table_name: The name of the table.
-        :param data: A dictionary of column names and values to be updated.
-        :param where_clause: A dictionary for the WHERE clause to specify which records to update.
+        :parameter table_name: The name of the table.
+        :parameter data: A dictionary of column names and values to be updated.
+        :parameter where_clause: A dictionary for the WHERE clause to specify which records to update.
         """
         try:
             self._connect_db()
@@ -392,8 +392,8 @@ class SQLiteDB:
         """
         Update indicator parameters in the database for a given indicator.
         
-        :param indicator_id: The ID of the indicator to update parameters for.
-        :param parameters: A dictionary of parameter names and values to update.
+        :parameter indicator_id: The ID of the indicator to update parameters for.
+        :parameter parameters: A dictionary of parameter names and values to update.
         """
         try:
             self._connect_db()
@@ -404,8 +404,8 @@ class SQLiteDB:
                     SET parameter_value = ?
                     WHERE indicator_id = ? AND parameter_name = ?
                 """
-            for param_name, param_value in parameters.items():
-                cursor.execute(query, (param_value, indicator_id, param_name))
+            for parameter_name, parameter_value in parameters.items():
+                cursor.execute(query, (parameter_value, indicator_id, parameter_name))
 
             self.conn.commit()
             logger.info(f"Updated indicator parameters for indicator ID {indicator_id}.")
@@ -414,12 +414,11 @@ class SQLiteDB:
         finally:
             self.close_connection()
 
-
     def delete_records(self, table_name, where_clause):
         """
         Delete records dynamically from the specified table.
-        :param table_name: The name of the table.
-        :param where_clause: A dictionary for the WHERE clause to specify which records to delete.
+        :parameter table_name: The name of the table.
+        :parameter where_clause: A dictionary for the WHERE clause to specify which records to delete.
         """
         try:
             self._connect_db()

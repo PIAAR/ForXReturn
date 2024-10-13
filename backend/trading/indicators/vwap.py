@@ -11,7 +11,7 @@ class VWAP:
         """
         Initialize the VWAP class with a SQLiteDB handler.
 
-        :param db_name: The name of the SQLite database file.
+        :parameter db_name: The name of the SQLite database file.
         """
         self.db_handler = SQLiteDB(db_name=db_name)
 
@@ -20,7 +20,7 @@ class VWAP:
         """
         Calculate the Volume Weighted Average Price (VWAP) for a given DataFrame.
         
-        :param df: DataFrame with 'high', 'low', 'close', and 'volume' columns.
+        :parameter df: DataFrame with 'high', 'low', 'close', and 'volume' columns.
         :return: DataFrame with VWAP values.
         """
         # Ensure the necessary columns exist
@@ -43,17 +43,17 @@ class VWAP:
         """
         Insert the VWAP results into the SQLite database.
 
-        :param indicator_name: The name of the indicator (e.g., 'VWAP').
-        :param instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
-        :param result_df: DataFrame containing the calculated VWAP values.
+        :parameter indicator_name: The name of the indicator (e.g., 'VWAP').
+        :parameter instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
+        :parameter result_df: DataFrame containing the calculated VWAP values.
         """
         indicator_id = self.db_handler.get_indicator_id(indicator_name)
         timestamp = datetime.now().isoformat()
 
-        param_name = 'vwap'
+        parameter_name = 'vwap'
         # Insert VWAP results row by row
         for _, row in result_df.iterrows():
-            param_value = row['vwap']
-            self.db_handler.add_indicator_results(indicator_id, timestamp, param_name, param_value)
+            parameter_value = row['vwap']
+            self.db_handler.add_indicator_results(indicator_id, timestamp, parameter_name, parameter_value)
 
         logger.info(f"Inserted VWAP results for {instrument} into SQLite.")

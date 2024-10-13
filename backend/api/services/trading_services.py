@@ -55,7 +55,7 @@ class TradingService:
         """
         Logs the trade in the MongoDB collection.
 
-        :param trade_data: A dictionary containing trade details.
+        :parameter trade_data: A dictionary containing trade details.
         :return: The inserted ID of the trade.
         """
         trade_id = self.mongo_handler.create(trade_data)
@@ -69,7 +69,7 @@ class TradingService:
         """
         Places a trade with the OANDA broker and logs it in the database.
 
-        :param trade_data: A dictionary containing trade details to place.
+        :parameter trade_data: A dictionary containing trade details to place.
         :return: A dictionary containing the OANDA API response.
         """
         try:

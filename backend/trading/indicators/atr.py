@@ -12,7 +12,7 @@ class ATR:
         """
         Initialize the ATR class with a SQLiteDB handler.
 
-        :param db_name: The name of the SQLite database file.
+        :parameter db_name: The name of the SQLite database file.
         """
         self.db_handler = SQLiteDB(db_name=db_name)
 
@@ -21,8 +21,8 @@ class ATR:
         """
         Calculate the Average True Range (ATR) for a given DataFrame.
 
-        :param df: DataFrame with 'high', 'low', and 'close' prices.
-        :param period: Lookback period for ATR calculation.
+        :parameter df: DataFrame with 'high', 'low', and 'close' prices.
+        :parameter period: Lookback period for ATR calculation.
         :return: DataFrame with the ATR values.
         """
         # Ensure the necessary columns exist
@@ -50,19 +50,19 @@ class ATR:
         """
         Insert the ATR results into the SQLite database.
 
-        :param indicator_name: The name of the indicator (e.g., 'ATR').
-        :param instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
-        :param result_df: DataFrame containing the calculated ATR values.
-        :param period: Period for which the ATR was calculated.
+        :parameter indicator_name: The name of the indicator (e.g., 'ATR').
+        :parameter instrument: The instrument for which the calculation was made (e.g., 'EUR_USD').
+        :parameter result_df: DataFrame containing the calculated ATR values.
+        :parameter period: Period for which the ATR was calculated.
         """
         indicator_id = self.db_handler.get_indicator_id(indicator_name)
         timestamp = datetime.now().isoformat()
 
-        param_name = 'atr'
+        parameter_name = 'atr'
         # Insert ATR results row by row
         for _, row in result_df.iterrows():
-            param_value = row['atr']
-            self.db_handler.add_indicator_results(indicator_id, timestamp, param_name, param_value)
+            parameter_value = row['atr']
+            self.db_handler.add_indicator_results(indicator_id, timestamp, parameter_name, parameter_value)
             self.db_handler.add_indicator_parameters(indicator_id, {'period': period})
 
         logger.info(f"Inserted ATR results for {instrument} into SQLite.")
