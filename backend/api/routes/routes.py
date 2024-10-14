@@ -15,7 +15,7 @@ Creates the Flask app and registers the blueprints. Defines the API routes.
 '''
 
 # Initialize the LogManager
-logger = LogManager('api_routes')
+logger = LogManager('api_routes').get_logger()
 
 # Define blueprints for different functionalities
 main = Blueprint('main', __name__)
@@ -30,7 +30,7 @@ instrument_db_connection = SQLiteDB("instruments.db")._connect_db()
 trading_service = TradingService(indicator_db_connection)
 data_population_service = DataPopulationService()
 # Initialize services with db connections
-config_path = os.path.join(os.path.dirname(__file__), '../../scripts/yml/indicator_params.yml')  # Specify the correct path to the YAML file
+config_path = os.path.join(os.path.dirname(__file__), '../../scripts/yml/indicator_parameters.yml')  # Specify the correct path to the YAML file
 config_loader = IndicatorConfigLoader(config_path)  # Pass the config path
 state_machine = StateMachine(config_loader, instrument_db_connection)
 

@@ -56,16 +56,16 @@ def simple_moving_average_strategy(df):
     df['signal'][df['SMA'] < df['close']] = -1  # Sell signal
     return df
 
-def apply_strategy(df, indicator_params):
+def apply_strategy(df, indicator_parameters):
     """
     Applies the specified trading strategy by calculating indicators and generating signals.
     :parameter df: Pandas DataFrame containing historical data.
-    :parameter indicator_params: Dictionary containing indicator parameters (e.g., 'rsi_period', 'sma_period').
+    :parameter indicator_parameters: Dictionary containing indicator parameters (e.g., 'rsi_period', 'sma_period').
     :return: DataFrame with applied strategy and signals.
     """
     # Fetch indicator parameters from the input (use defaults if not provided)
-    rsi_period = indicator_params.get('rsi_period', 14)
-    sma_period = indicator_params.get('sma_period', 20)
+    rsi_period = indicator_parameters.get('rsi_period', 14)
+    sma_period = indicator_parameters.get('sma_period', 20)
 
     # Calculate indicators using the specified periods
     df = calculate_rsi(df, period=rsi_period)

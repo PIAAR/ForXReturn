@@ -21,7 +21,7 @@ class IndicatorsController:
         self.mongo_handler = MongoDBHandler(db_name="forex_data")
         
         # Initialize the YAML config loader with a valid path
-        config_path = os.path.join(os.path.dirname(__file__), '../../scripts/yml/indicator_params.yml')
+        config_path = os.path.join(os.path.dirname(__file__), '../../scripts/yml/indicator_parameters.yml')
         self.config_loader = IndicatorConfigLoader(config_path)  # Pass the config path
         if not os.path.isfile(self.config_path):
             raise FileNotFoundError(f"YAML Config file not found: {config_path}")
@@ -90,14 +90,14 @@ class IndicatorsController:
         """
         Get parameters from the YAML config file for the specific indicator.
         """
-        return self.config_loader.get_indicator_params(indicator_name, "macro")  # Example using the "macro" tier
+        return self.config_loader.get_indicator_parameters(indicator_name, "macro")  # Example using the "macro" tier
     
-    def calculate_indicator(self, indicator_name, df, params, instrument):
+    def calculate_indicator(self, indicator_name, df, parameters, instrument):
         """
         Dynamically load and calculate the indicator values using fetched historical data.
         :parameter indicator_name: The name of the indicator file (without .py).
         :parameter df: Historical data as a Pandas DataFrame.
-        :parameter params: Calculation parameters for the indicator.
+        :parameter parameters: Calculation parameters for the indicator.
         :parameter instrument: The financial instrument for which the calculation is made (e.g., EUR_USD)
         """
         try:
@@ -111,8 +111,8 @@ class IndicatorsController:
                 indicator_instance = indicator_class()
 
                 # Call the calculate method and store results in the DB
-                result_df = indicator_instance.calculate(df, **params)
-                indicator_instance.insert_results_to_db(class_name, instrument, result_df, **params)
+                result_df = indicator_instance.calculate(df, **parameters)
+                indicator_instance.insert_results_to_db(class_name, instrument, result_df, **parameters)
 
                 logger.info(f"Indicator {indicator_name} processed for {instrument}.")
             else:
@@ -133,8 +133,8 @@ class IndicatorsController:
                 for instrument in major_pairs:
                     df = self.fetch_historical_data(instrument, "M")
                     if df is not None:
-                        params = self.extract_parameters(indicator_file)
-                        self.calculate_indicator(indicator_file, df, params, instrument)
+                        parameters = self.extract_parameters(indicator_file)
+                        self.calculate_indicator(indicator_file, df, parameters, instrument)
                         
                         # Assuming we have indicator results, we'll pass them into the state machine
                         # For now, simulate some results to show how it would work

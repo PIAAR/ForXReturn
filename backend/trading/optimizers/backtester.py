@@ -5,7 +5,7 @@ from backend.data.repositories._sqlite_db import SQLiteDB
 from backend.logs.log_manager import LogManager
 
 # Initialize the LogManager
-logger = LogManager('backtester_logs')
+logger = LogManager('backtester_logs').get_logger()
 
 class Backtester:
     def __init__(self, initial_balance=10000):
@@ -79,8 +79,8 @@ class Backtester:
             WHERE instrument_id = ? AND granularity = ?
             ORDER BY timestamp ASC
         """
-        params = (instrument_id, granularity)
-        if not (result := self.db_handler.fetch_records_with_query(query, params)):
+        parameters = (instrument_id, granularity)
+        if not (result := self.db_handler.fetch_records_with_query(query, parameters)):
             raise ValueError(f"No data found for instrument {instrument} with granularity {granularity}.")
         self.data = pd.DataFrame(result)
         self.data['timestamp'] = pd.to_datetime(self.data['timestamp'])

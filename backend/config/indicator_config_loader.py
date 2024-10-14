@@ -12,7 +12,7 @@ class IndicatorConfigLoader:
         except FileNotFoundError:
             raise FileNotFoundError(f"YAML config file not found: {config_path}")
 
-    def get_indicator_params(self, indicator_name, tier):
+    def get_indicator_parameters(self, indicator_name, tier):
         """
         Returns the indicator parameters from the loaded YAML file.
         :return: Dictionary of indicator parameters.

@@ -71,7 +71,7 @@ class TestOptimizerBacktest(unittest.TestCase):
         optimizer = Optimizer(self.db_path)
         
         # Simulate running the optimization
-        optimizer.run_optimization(params={'SMA': 20})
+        optimizer.run_optimization(parameters={'SMA': 20})
 
         # Check if the parameters in the database were updated
         self.cursor.execute("SELECT value FROM indicator_parameters WHERE key='SMA'")

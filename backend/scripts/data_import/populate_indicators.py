@@ -18,7 +18,7 @@ def populate_indicators():
     db.initialize_db()
 
     # Path to the YAML file
-    yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../yml/indicator_params.yml')
+    yaml_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../scripts/yml/indicator_params.yml')
     
     # Load indicators from YAML
     indicators = load_indicators_from_yaml(yaml_file)
@@ -35,13 +35,13 @@ def populate_indicators():
         })
 
         # Insert indicator parameters for each timeframe (macro, daily, micro)
-        for timeframe, params_data in indicator_data.items():
+        for timeframe, parameters_data in indicator_data.items():
             # Skip if the key is 'type'
             if timeframe == "type":
                 continue
 
             # Get the weight for the current timeframe
-            weight = params_data.get('weight', 1)
+            weight = parameters_data.get('weight', 1)
 
             # Insert the weight as a parameter in the indicator_parameters table
             db.add_record("indicator_parameters", {
@@ -52,7 +52,7 @@ def populate_indicators():
             })
 
             # Insert other parameters into the indicator_parameters table
-            for parameter_name, parameter_value in params_data.items():
+            for parameter_name, parameter_value in parameters_data.items():
                 if parameter_name != 'weight':  # Skip weight since it's handled separately
                     parameter_type = "float" if isinstance(parameter_value, (int, float)) else "text"
                     db.add_record("indicator_parameters", {

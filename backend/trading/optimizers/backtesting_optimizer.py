@@ -19,7 +19,7 @@ class Backtester:
         bt = Backtest(data, indicator_strategy, cash=10000, commission=0.002)
         return bt.run()
 
-    def fetch_indicator_params(self, indicator_name):
+    def fetch_indicator_parameters(self, indicator_name):
         """
         Fetch the parameters for a given indicator from the SQLite database.
         :parameter indicator_name: The name of the indicator.
@@ -28,13 +28,13 @@ class Backtester:
         self.cursor.execute("SELECT key, value FROM indicator_parameters WHERE indicator_id = (SELECT id FROM indicators WHERE name=?)", (indicator_name,))
         return dict(self.cursor.fetchall())
 
-    def update_parameters_in_db(self, indicator_name, optimized_params):
+    def update_parameters_in_db(self, indicator_name, optimized_parameters):
         """
         Update the optimized parameters for a given indicator in the SQLite database.
         :parameter indicator_name: The name of the indicator.
-        :parameter optimized_params: Dictionary of optimized parameters.
+        :parameter optimized_parameters: Dictionary of optimized parameters.
         """
-        for key, value in optimized_params.items():
+        for key, value in optimized_parameters.items():
             self.cursor.execute(
                 "UPDATE indicator_parameters SET value = ? WHERE key = ? AND indicator_id = (SELECT id FROM indicators WHERE name=?)",
                 (value, key, indicator_name)
@@ -49,24 +49,24 @@ class Backtester:
         :parameter data: Data for the backtest.
         """
         # 1. Fetch current parameters from DB
-        params = self.fetch_indicator_params(indicator_name)
+        parameters = self.fetch_indicator_parameters(indicator_name)
 
         # 2. Run the backtest
         print(f"Running backtest for {indicator_name}...")
         stats = self.backtest_indicator(strategy_class, data)
 
         # 3. Optimize the parameters based on the backtest results
-        optimized_params = self.optimize_parameters(params, stats)
+        optimized_parameters = self.optimize_parameters(parameters, stats)
 
         # 4. Update the database with the optimized parameters
-        self.update_parameters_in_db(indicator_name, optimized_params)
+        self.update_parameters_in_db(indicator_name, optimized_parameters)
 
         print(f"Optimization complete for {indicator_name}. Parameters updated in DB.")
 
-    def optimize_parameters(self, params, stats):
+    def optimize_parameters(self, parameters, stats):
         """
         Optimizes parameters based on backtest results (e.g., Sharpe ratio).
-        :parameter params: The original parameters.
+        :parameter parameters: The original parameters.
         :parameter stats: Backtest statistics (e.g., Sharpe ratio, total return).
         :return: Optimized parameters.
         """
@@ -76,7 +76,7 @@ class Backtester:
                 if stats['Sharpe Ratio'] > 1
                 else float(value) * 0.9
             )
-            for parameter, value in params.items()
+            for parameter, value in parameters.items()
         }
 
 

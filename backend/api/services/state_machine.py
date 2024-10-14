@@ -20,10 +20,10 @@ class StateMachine:
 
         for indicator_name, result in indicator_results.items():
             logger.info(f"Processing {indicator_name} for {tier}")
-            if indicator_params := self.indicator_loader.get_indicator_params(
+            if indicator_parameters := self.indicator_loader.get_indicator_parameters(
                 indicator_name, tier
             ):
-                weight = indicator_params.get('weight', 1)  # Default to weight 1 if not found
+                weight = indicator_parameters.get('weight', 1)  # Default to weight 1 if not found
                 weighted_sum += result * weight
                 total_weight += weight
 

@@ -9,7 +9,7 @@ class TestStateMachine(unittest.TestCase):
     def setUp(self):
         # Determine the correct path for the YAML file
         base_path = os.path.dirname(__file__)  # Current directory of the test file
-        yaml_path = os.path.join(base_path, '../../scripts/yml/indicator_params.yml')
+        yaml_path = os.path.join(base_path, '../../scripts/yml/indicator_parameters.yml')
         # Initialize SQLiteDB connection
         self.db_connection = SQLiteDB(db_name="instruments.db")  # Use your actual database name
 
@@ -22,7 +22,7 @@ class TestStateMachine(unittest.TestCase):
             self.addCleanup(patcher.stop)
             MockLoader = patcher.start()
             self.config_loader = MockLoader.return_value
-            self.config_loader.get_indicator_params.return_value = {'ATR': 1, 'ADX': 0}  # Mocked example config
+            self.config_loader.get_indicator_parameters.return_value = {'ATR': 1, 'ADX': 0}  # Mocked example config
 
         # Initialize the state machine with the config loader
         self.state_machine = StateMachine(self.config_loader, self.db_connection)

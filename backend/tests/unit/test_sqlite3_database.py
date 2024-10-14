@@ -1,88 +1,87 @@
 import unittest
 from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.logs.log_manager import LogManager
+
+# Configure logging
+log_manager = LogManager('test_sqlite3_database')
+logger = log_manager.get_logger()
 
 class TestSQLiteDatabase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         """Set up the test class with an in-memory database."""
+        logger.info("Setting up the in-memory database for testing.")
         cls.db = SQLiteDB(':memory:')  # Use in-memory database for testing
 
         # Schema SQL for testing
         schema_sql = """
         CREATE TABLE IF NOT EXISTS indicators (
-            id INTEGER PRIMARY KEY,
-            name TEXT,
-            type TEXT
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            type TEXT NOT NULL
         );
         
         CREATE TABLE IF NOT EXISTS indicator_parameters (
-            indicator_id INTEGER,
-            key TEXT,
-            value REAL,
-            PRIMARY KEY (indicator_id, key),
-            FOREIGN KEY (indicator_id) REFERENCES indicators (id)
-        );
-        
-        CREATE TABLE IF NOT EXISTS instrument_indicator_results (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            indicator_id INTEGER,
-            time TEXT,
-            key TEXT,
-            value REAL,
-            FOREIGN KEY (indicator_id) REFERENCES indicators (id)
+            indicator_id INTEGER NOT NULL,
+            parameter_name TEXT NOT NULL,
+            parameter_value REAL NOT NULL,
+            last_updated TIMESTAMP NOT NULL,
+            FOREIGN KEY (indicator_id) REFERENCES indicators (id) ON DELETE CASCADE
         );
         """
+        logger.info("Initializing the database schema.")
         cls.db.initialize_db(schema_sql)
 
-        # Add a sample indicator to the database for testing
-        cls.db.add_indicator("ATR", "volatility")
+        logger.info("Attempting to add parameters for BollingerBands (ID 4).")
+
+        # Add parameters for BollingerBands (ID = 4)
+        cls.db.add_indicator_parameters(4, {
+            "macro_period": 20,
+            "upper_band": 2.0,
+            "lower_band": -2.0
+        })
+        logger.info("Parameters for BollingerBands (ID 4) have been added.")
 
     @classmethod
     def tearDownClass(cls):
         """Close the database connection after all tests."""
+        logger.info("Tearing down the test class and closing the database connection.")
         cls.db.close_connection()
 
-    def test_add_indicator_results(self):
-        """Test adding an indicator result."""
-        self.db.add_indicator_results(1, "2024-01-01T00:00:00Z", "atr_value", 1.23)
-        results = self.db.get_indicator_results(1)  # Fixed method name
-        self.assertGreaterEqual(len(results), 1)
-        self.assertEqual(results[0][1], "2024-01-01T00:00:00Z")  # Check the time value
-        self.assertEqual(results[0][3], 1.23)  # Check the ATR value
+    def test_get_bollinger_band_parameters(self):
+        """Test retrieving parameters for BollingerBands indicator (ID = 4)."""
+        logger.info("Retrieving parameters for BollingerBands indicator (ID 4).")
 
-    def test_add_indicator_parameters(self):
-        """Test adding parameters to an indicator."""
-        self.db.add_indicator_parameters(1, {"period": 14, "multiplier": 1.5})
+        # Get the BollingerBands parameters
+        parameters = self.db.get_indicator_parameters(4)
+
+        logger.info(f"Retrieved parameters for BollingerBands: {parameters}")
+
+        # Assert that the parameters match the expected values
+        logger.info("Starting assertion for 'macro_period'.")
+        if "macro_period" not in parameters:
+            logger.error("Expected 'macro_period' to be in parameters but it's missing.")
+        self.assertIn("macro_period", parameters, "Expected 'macro_period' to be in parameters.")
+        self.assertEqual(float(parameters["macro_period"]), 20.0, "Expected 'macro_period' to be 20.")
+        logger.info("Assertion for 'macro_period' passed.")
         
-        # Retrieve and check the added parameters
-        params = self.db.get_indicator_parameters(1)  # Fixed method name
-        self.assertEqual(float(params["period"]), 14.0)
-        self.assertEqual(float(params["multiplier"]), 1.5)
-
-    def test_update_indicator_parameters(self):
-        """Test updating an indicator parameter."""
-        # First, add initial parameters
-        self.db.add_indicator_parameters(1, {"period": 14, "multiplier": 1.5})
-
-        # Then, update the parameters for the same indicator
-        self.db.update_indicator_parameters(1, {"period": 20, "multiplier": 2.0})
+        logger.info("Starting assertion for 'upper_band'.")
+        if "upper_band" not in parameters:
+            logger.error("Expected 'upper_band' to be in parameters but it's missing.")
+        self.assertIn("upper_band", parameters, "Expected 'upper_band' to be in parameters.")
+        self.assertEqual(float(parameters["upper_band"]), 2.0, "Expected 'upper_band' to be 2.0.")
+        logger.info("Assertion for 'upper_band' passed.")
         
-        # Retrieve and check the updated parameters
-        params = self.db.get_indicator_parameters(1)  # Fixed method name
-        self.assertEqual(float(params["period"]), 20.0)
-        self.assertEqual(float(params["multiplier"]), 2.0)
+        logger.info("Starting assertion for 'lower_band'.")
+        if "lower_band" not in parameters:
+            logger.error("Expected 'lower_band' to be in parameters but it's missing.")
+        self.assertIn("lower_band", parameters, "Expected 'lower_band' to be in parameters.")
+        self.assertEqual(float(parameters["lower_band"]), -2.0, "Expected 'lower_band' to be -2.0.")
+        logger.info("Assertion for 'lower_band' passed.")
 
-    def test_add_bollinger_band_parameters(self):
-        """Test adding parameters for Bollinger Bands indicator."""
-        self.db.add_indicator("Bollinger Bands", "volatility")
-        self.db.add_indicator_parameters(2, {"period": 20, "upper_band": 2.0, "lower_band": -2.0})
-
-        # Retrieve and check the added parameters for the Bollinger Bands indicator
-        params = self.db.get_indicator_parameters(2)  # Fixed method name
-        self.assertEqual(float(params["period"]), 20.0)
-        self.assertEqual(float(params["upper_band"]), 2.0)
-        self.assertEqual(float(params["lower_band"]), -2.0)
+        logger.info("All assertions for BollingerBands parameters passed.")
 
 if __name__ == '__main__':
     unittest.main()

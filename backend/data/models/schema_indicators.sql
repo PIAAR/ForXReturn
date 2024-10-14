@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS indicator_parameters (
     parameter_name TEXT NOT NULL,       -- Name of the parameter (e.g., "period", "multiplier")
     parameter_type TEXT NOT NULL,       -- Type of the parameter (e.g., "integer", "float", "boolean")
     default_value TEXT,             -- Default value for the parameter (optional)
+    last_update TIMESTAMP NOT NULL, -- When the parameter was last updated
     FOREIGN KEY(indicator_id) REFERENCES indicators(id) ON DELETE CASCADE
 );
 

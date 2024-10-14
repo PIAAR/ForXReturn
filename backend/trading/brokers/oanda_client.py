@@ -88,12 +88,12 @@ class OandaClient:
         :return: A list of candle data.
         """
         url = f'{self.base_url}/instruments/{instrument}/candles'
-        params = {
+        parameters = {
             'granularity': granularity,
             'count': count
         }
         try:
-            response = requests.get(url, headers=self.headers, params=params)
+            response = requests.get(url, headers=self.headers, parameters=parameters)
             response.raise_for_status()  # Raise an error for bad responses
             data = response.json()
             if 'candles' in data:
