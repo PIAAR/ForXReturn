@@ -1,4 +1,10 @@
 from backend.api.routes.routes import create_app
+import sys
+import os
+
+# Add the parent directory to sys.path
+# sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 
 '''
 Flask is a web application framework written in Python. It is based on the Werkzeug WSGI toolkit and Jinja2 template engine. 
