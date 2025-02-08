@@ -204,7 +204,7 @@ def evaluate_state():
         return jsonify({"error": str(e)}), 500
 
 # -------------------- Data Population Routes --------------------
-@data_population_bp.route('/populate_data', methods=['POST'])
+@data_population_bp.route('/populate_data', methods=['GET, POST'])
 def populate_data():
     """
     Populate data for all instruments.

@@ -43,6 +43,19 @@ class MongoDBHandler:
                 raise
         return MongoDBHandler._client
 
+    def list_collections(self):
+            """
+            Lists all collections in the database.
+            :return: A list of collection names.
+            """
+            try:
+                collections = self.db.list_collection_names()
+                logger.info(f"Retrieved collections: {collections}")
+                return collections
+            except errors.PyMongoError as err:
+                logger.error(f"Failed to list collections: {err}")
+                raise
+
     def collection_exists(self, collection_name):
         """
         Checks if a collection exists in the database.

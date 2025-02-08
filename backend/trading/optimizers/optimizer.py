@@ -1,10 +1,10 @@
 from datetime import datetime
-from logs.log_manager import LogManager
+from backend.logs.log_manager import LogManager
 from backend.data.repositories._sqlite_db import SQLiteDB
-from trading.optimizers.backtester import Backtester
-from trading.indicators.sma import SMA
-from trading.indicators.ema import EMA
-from trading.indicators.rsi import RSI  # Assuming you have this implemented
+from backend.trading.optimizers.backtester import Backtester
+from backend.trading.indicators.sma import SMA
+from backend.trading.indicators.ema import EMA
+from backend.trading.indicators.rsi import RSI  # Assuming you have this implemented
 
 # Configure logging
 logger = LogManager('optimizer_logs').get_logger()

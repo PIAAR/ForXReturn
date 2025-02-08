@@ -15,6 +15,7 @@ class SQLiteDB:
         base_dir = os.path.dirname(os.path.abspath(__file__))
         self.db_path = os.path.join(base_dir, "databases", db_name)
         self.conn = None
+        self._connect_db()
         logger.info(f"Database initialized at {self.db_path}")
 
     def _connect_db(self):
@@ -76,22 +77,23 @@ class SQLiteDB:
             self.close_connection()
 
     def initialize_db(self, schema_sql=None):
-        if schema_sql:
+        if not schema_sql and (schema_sql := self.load_schema()) or schema_sql:
             self.execute_script(schema_sql)
-        else:
-            if schema_sql := self.load_schema():
-                self.execute_script(schema_sql)
 
     def get_instrument_id(self, instrument_name):
+        """
+        Fetch the instrument ID from the SQLite database.
+        """
         try:
             self._connect_db()
             cursor = self.conn.cursor()
 
             query = "SELECT id FROM instruments WHERE name = ?"
             cursor.execute(query, (instrument_name,))
-            result = cursor.fetchone()
-
-            if result:
+            print(f'This is the instrument name {instrument_name}')
+            
+            if result := cursor.fetchone():
+                logger.info(f"✅ Instrument '{instrument_name}' found with ID: {result[0]}")
                 return result[0]
             else:
                 logger.error(f"Instrument {instrument_name} not found.")
@@ -303,6 +305,27 @@ class SQLiteDB:
             return self.fetch_from_the_database(table_name, where_clause)
         except Exception as e:
             logger.error(f"Error fetching records from {table_name}: {e}")
+            return []
+        finally:
+            self.close_connection()
+
+    def fetch_records_with_query(self, query, parameters=()):
+        """
+        Execute a SQL query with parameters and fetch all records.
+
+        :param query: SQL query string.
+        :param parameters: Tuple of query parameters.
+        :return: List of records.
+        """
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+            cursor.execute(query, parameters)
+            results = cursor.fetchall()
+            logger.info(f"✅ Fetched {len(results)} records from SQLite.")
+            return results
+        except Exception as e:
+            logger.error(f"❌ Error executing query: {query} - {e}")
             return []
         finally:
             self.close_connection()

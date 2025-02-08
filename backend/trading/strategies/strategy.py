@@ -1,6 +1,6 @@
 # backend/trading/strategies/strategy.py
-from trading.indicators.rsi import RSI
-from trading.indicators.sma import SMA
+from backend.trading.indicators.rsi import RSI
+from backend.trading.indicators.sma import SMA
 import pandas as pd
 
 '''

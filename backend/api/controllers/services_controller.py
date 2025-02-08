@@ -1,8 +1,8 @@
 # backend/api/controllers/services_controller.py
 from flask import Blueprint, jsonify, request
-from trading.brokers.oanda_client import OandaClient
-from services.trading_services import TradingService as trading_service
-from api.services.data_population_service import DataPopulationService as data_population_service
+from backend.trading.brokers.oanda_client import OandaClient
+from backend.api.services.trading_services import TradingService as trading_service
+from backend.api.services.data_population_service import DataPopulationService as data_population_service
 import os
 
 '''

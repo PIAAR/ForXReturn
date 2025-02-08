@@ -3,7 +3,7 @@ from backtesting import Backtest, Strategy  # Assuming Backtesting.py is used
 from backtesting.lib import crossover
 from threading import Thread
 
-class Backtester:
+class BacktestOptimizer:
     def __init__(self, db_path='backend/data/repositories/databases/optimizer.db'):
         self.db_path = db_path
         self.conn = sqlite3.connect(self.db_path)

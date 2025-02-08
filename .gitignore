@@ -3,3 +3,7 @@
 *.pyc
 *.log
 *.db
+*.pyc
+*.pyc
+backend/config/settings/config.json
+*.pyc

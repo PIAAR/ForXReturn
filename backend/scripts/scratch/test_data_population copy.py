@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import MagicMock, patch
-from api.services.data_population_service import DataPopulationService
+from backend.api.services.data_population_service import DataPopulationService
 
 
 class TestDataPopulationService(unittest.TestCase):

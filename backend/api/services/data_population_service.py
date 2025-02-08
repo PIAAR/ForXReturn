@@ -1,15 +1,12 @@
-# backend/api/services/data_population_service.py
-# MongoDB historical data population
-
 import itertools
 import os
 import time
+import json
 
 import schedule
-from data.repositories.mongo import MongoDBHandler
-from logs.log_manager import LogManager
-from trading.brokers.oanda_client import OandaClient
-
+from backend.data.repositories.mongo import MongoDBHandler
+from backend.logs.log_manager import LogManager
+from backend.trading.brokers.oanda_client import OandaClient
 
 class DataPopulationService:
     def __init__(self):
@@ -19,6 +16,9 @@ class DataPopulationService:
         # MongoDB handler for saving data
         self.mongo_handler = MongoDBHandler(db_name="forex_data")
         
+        # Cache existing collections to reduce redundant database queries
+        self.existing_collections = set(self.mongo_handler.list_collections())
+        
         # Ensure the database exists before querying or inserting data
         self.mongo_handler.ensure_database_exists()
 
@@ -26,8 +26,30 @@ class DataPopulationService:
         self.oanda_client = OandaClient(
             environment=os.getenv('OANDA_ENV', 'practice')  # Default to 'practice'
         )
+        
         # Logger for data population service
         self.logger = LogManager('data_population_logs').get_logger()
+
+        # Load scheduler configuration
+        self.scheduler_config_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../config/settings/config.json"))
+
+        self.scheduler_enabled = self.load_scheduler_config()
+
+    def load_scheduler_config(self):
+        """
+        Load the scheduler configuration from JSON file.
+        """
+        try:
+            if not os.path.exists(self.scheduler_config_path):
+                self.logger.warning(f"Scheduler config file not found at {self.scheduler_config_path}. Using default settings.")
+                return False
+            
+            with open(self.scheduler_config_path, 'r') as f:
+                config = json.load(f)
+            return config.get("scheduler_enabled", False)
+        except Exception as e:
+            self.logger.error(f"Error loading scheduler config: {e}")
+            return False
 
     def ensure_collection_exists_and_populate(self, instrument, granularity="D", count=5000):
         """
@@ -38,28 +60,23 @@ class DataPopulationService:
         :parameter count: The number of data points to fetch.
         """
         try:
-            # Ensure the instrument symbol is always lowercase
             instrument = instrument.upper()
+            collection_name = f"{instrument.lower()}_{granularity.upper()}_data"
             
-            # Prepare collection name based on instrument and granularity
-            collection_name = f"{instrument.lower()}_{granularity.lower()}_data"
-            
-            # Switch to or create the collection
-            # self.mongo_handler.switch_collection(collection_name)
-            
-            # Fetch and store data if collection does not already exist
-            if not self.mongo_handler.collection_exists(collection_name):
+            if collection_name not in self.existing_collections:
                 self.logger.info(f"Collection '{collection_name}' does not exist. Populating data...")
-                
-                # Ensure the collection is created and indexed before querying or inserting data
                 self.mongo_handler.create_collection_with_index(collection_name, index_field="time")
-                
-                # Fetch and store data after ensuring collection is created
-                self.mongo_handler.populate_historical_data(instrument, granularity, count)
-        
+                # Fetch and insert historical data
+                data_inserted = self.mongo_handler.populate_historical_data(instrument, granularity, count)
+
+                if data_inserted:
+                    self.logger.info(f"Inserted {len(data_inserted)} records into {collection_name}.")
+                else:
+                    self.logger.warning(f"No data inserted for {instrument} ({granularity}).")
+
+                self.existing_collections.add(collection_name)
             else:
                 self.logger.info(f"Collection '{collection_name}' already exists. Skipping creation.")
-
         except Exception as e:
             self.logger.error(f"Error ensuring collection and populating data for {instrument}: {e}")
             raise
@@ -68,31 +85,36 @@ class DataPopulationService:
         """
         Populate historical data for all major forex instruments and multiple granularities.
         """
-        print("Populating all instruments with historical data.")
-        try:
-            # List of major forex pairs and granularities to fetch
-            major_pairs = ["EUR_USD", "GBP_USD", "USD_JPY", "AUD_USD", "USD_CHF", "USD_CAD"]
-            granularities = ["M1", "D", "M"]
+        self.logger.info("Populating all instruments with historical data.")
 
-            # Fetch and store data for each pair and granularity
-            for pair, granularity in itertools.product(major_pairs, granularities):
-                self.mongo_handler.populate_historical_data(pair, granularity)
-            
-        except Exception as e:
-            # Log error in case of failure in populating data for all instruments
-            self.logger.error(f"Error populating all instruments: {e}")
-            raise
+        major_pairs = ["EUR_USD", "GBP_USD", "USD_JPY", "AUD_USD", "USD_CHF", "USD_CAD"]
+        granularities = ["M1", "D", "M"]
 
-    # def update_data_every_minute(self):
-    #     """
-    #     Scheduler to update historical data for all instruments every minute.
-    #     """
-    #     self.populate_all_instruments()  # Initial population
-    #     schedule.every(1).minute.do(self.populate_all_instruments)
+        for pair, granularity in itertools.product(major_pairs, granularities):
+            try:
+                self.logger.info(f"Populating {pair} ({granularity})...")
 
-    #     self.logger.info("Data population scheduler started, updating every minute.")
+                if data_inserted := self.mongo_handler.populate_historical_data(
+                    pair, granularity
+                ):
+                    self.logger.info(f"Successfully inserted {len(data_inserted)} records for {pair} ({granularity}).")
+                else:
+                    self.logger.warning(f"No data was inserted for {pair} ({granularity}).")
 
-    #     # Run the schedule indefinitely
-    #     while True:
-    #         schedule.run_pending()
-    #         time.sleep(1)
+            except Exception as e:
+                self.logger.error(f"Error populating {pair} ({granularity}): {e}")
+
+    def update_data_every_minute(self):
+        """
+        Scheduler to update historical data for all instruments every minute.
+        """
+        if not self.scheduler_enabled:
+            self.logger.info("Scheduler is disabled by config.")
+            return
+        
+        self.logger.info("Data population scheduler started, updating every minute.")
+        schedule.every(1).minute.do(self.populate_all_instruments)
+        
+        while True:
+            schedule.run_pending()
+            time.sleep(1)

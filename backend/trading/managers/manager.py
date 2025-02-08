@@ -1,5 +1,5 @@
-from trading.strategies import strategy
-from trading.optimizers import optimizer
+from backend.trading.strategies import strategy
+from backend.trading.optimizers import optimizer
 
 '''
 This module contains the logic for managing trading.

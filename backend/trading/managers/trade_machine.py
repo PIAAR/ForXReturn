@@ -1,9 +1,9 @@
-from trading.brokers.oanda_client import OandaClient
+from backend.trading.brokers.oanda_client import OandaClient
 import pandas as pd
 from backend.trading.indicators.macd import MACD
 from backend.trading.indicators.rsi import RSI
 from backend.api.services.state_machine import StateMachine
-from variables import TRADE_INSTRUMENTS, STATE_MACHINE, SWITCHES, SCENARIOS, BT_TYPE
+from backend.config.settings.variables import TRADE_INSTRUMENTS, STATE_MACHINE, SWITCHES, SCENARIOS, BT_TYPE
 
 class TradeMachine:
     def __init__(self, oanda_api):

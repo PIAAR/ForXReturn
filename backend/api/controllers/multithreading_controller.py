@@ -2,12 +2,12 @@
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
-from api.services.trading_services import TradingService
-from api.services.data_population_service import DataPopulationService
-from trading.optimizers.backtester import Backtester
-from trading.optimizers.optimizer import Optimizer
-from api.services.state_machine import StateMachine
-from logs.log_manager import LogManager
+from backend.api.services.trading_services import TradingService
+from backend.api.services.data_population_service import DataPopulationService
+from backend.trading.optimizers.backtester import Backtester
+from backend.trading.optimizers.optimizer import Optimizer
+from backend.api.services.state_machine import StateMachine
+from backend.logs.log_manager import LogManager
 
 # Initialize logging
 logger = LogManager('multithreading_controller')
