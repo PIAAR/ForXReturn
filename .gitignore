@@ -7,3 +7,4 @@
 *.pyc
 backend/config/settings/config.json
 *.pyc
+*.pyc

@@ -1,7 +1,12 @@
 # backend/data/repositories/mongo.py
 import os
-from backend.config.secrets import defs
+from datetime import datetime, timedelta
+
+import yfinance as yf
+from datetime import timezone
 from pymongo import MongoClient, errors
+
+from backend.config.secrets import defs
 from backend.logs.log_manager import LogManager
 from backend.trading.brokers.oanda_client import OandaClient
 
@@ -267,43 +272,56 @@ class MongoDBHandler:
         """
         Ensure the MongoDB collection exists and populate it with historical data.
 
-        :parameter instrument: The forex pair (e.g., "EUR_USD").
-        :parameter granularity: The timeframe (e.g., "M1", "D", "H1").
-        :parameter count: The number of data points to fetch.
+        :param instrument: The forex pair (e.g., "EUR_USD").
+        :param granularity: The timeframe (e.g., "M1", "D", "H1").
+        :param count: The number of data points to fetch.
         """
         try:
-            # Prepare collection name based on instrument and granularity
             collection_name = f"{instrument.lower()}_{granularity.lower()}_data"
-            
-            # Ensure the collection is created and indexed
+
+            # Ensure collection exists and create it if necessary
             self.create_collection_with_index(collection_name, index_field="time")
-            
-            # Fetch and store data if collection does not already exist
-            self.populate_historical_data(instrument, granularity, count)
-        
+
+            # Check if the latest data exists before fetching new data
+            latest_record = self.db[collection_name].find_one(sort=[("time", -1)])
+            latest_time = latest_record["time"] if latest_record else None
+
+            if latest_time:
+                logger.info(f"📌 Latest stored data for {instrument} ({granularity}): {latest_time}")
+                start_time = datetime.fromisoformat(latest_time[:-1])  # Remove trailing 'Z' if present
+            else:
+                start_time = datetime.utcnow() - timedelta(days=30)  # Default to last 30 days if no data
+
+            logger.info(f"Latest record found in {collection_name} at {latest_time}. Fetching newer data...")
+
+            # Fetch **only newer data** from OANDA
+            new_data = self.oanda_client.fetch_historical_data(instrument, granularity, count, start_time=start_time)
+            # Ensure collection is set before inserting
+            self.switch_collection(collection_name)
+
+            if new_data:
+                self.switch_collection(collection_name)
+                self.short_bulk_insert(new_data)
+                logger.info(f"✅ Inserted {len(new_data)} new records for {instrument} in {granularity}.")
+            else:
+                logger.info(f"⚠️ No new data available for {instrument} in {granularity}.")
+
         except Exception as e:
-            logger.error(f"Error ensuring collection and populating data for {instrument}: {e}")
+            logger.error(f"❌ Error ensuring collection and populating data for {instrument}: {e}")
             raise
 
     def create_collection_with_index(self, collection_name, index_field="time"):
         """
         Creates a new collection with an index on a specific field if it doesn't already exist.
         
-        :parameter collection_name: The name of the collection to create.
-        :parameter index_field: The field to index (default is 'time').
+        :param collection_name: The name of the collection to create.
+        :param index_field: The field to index (default is 'time').
         """
         if collection_name not in self.db.list_collection_names():
-            # Create the collection
             self.db.create_collection(collection_name)
-            logger.info(f"Created collection: {collection_name}")
-            # Switch to the collection and create an index on the 'time' field
             self.collection = self.db[collection_name]
-            
-            if self.collection is None:
-                raise ValueError(f"Failed to create or switch to collection: {collection_name}")
-            
             self.collection.create_index([(index_field, 1)], unique=True)
-            logger.info(f"Created index on '{index_field}' for collection {collection_name}")
+            logger.info(f"Created collection '{collection_name}' with index on '{index_field}'")
             
     def populate_historical_data(self, instrument, granularity="D", count=5000):
         """
@@ -349,38 +367,131 @@ class MongoDBHandler:
             logger.error(f"Error populating data for {instrument}: {e}")
             raise
 
-    def populate_sqlite_from_mongo(self, sqlite_db, collection_name, instrument, granularity):
+    def populate_sqlite_from_mongo(self, sqlite_db, instrument, granularity):
         """
         Populate data from MongoDB to SQLite for backtesting.
-        :parameter sqlite_db: The SQLite database object to insert data into.
-        :parameter collection_name: The name of the MongoDB collection to fetch data from.
-        :parameter instrument: The forex pair (e.g., 'EUR_USD').
-        :parameter granularity: The timeframe (e.g., 'D', 'M1', 'H1').
+
+        :param sqlite_db: The SQLite database object to insert data into.
+        :param instrument: The forex pair (e.g., 'EUR_USD').
+        :param granularity: The timeframe (e.g., 'D', 'M1', 'H1').
         """
-        data = self.read({}, collection_name=collection_name)  # Fetch all data from MongoDB
+        collection_name = f"{instrument.lower()}_{granularity.lower()}_data"
+        data = self.read({}, collection_name=collection_name)
 
-        instrument_id = sqlite_db.get_instrument_id(instrument)  # Get or insert instrument ID
+        if not data:
+            logger.warning(f"⚠️ No data found in MongoDB for {instrument} with {granularity}. Fetching...")
+            self.ensure_collection_exists_and_populate(instrument, granularity, count=500)
+            data = self.read({}, collection_name=collection_name)
 
-        for record in data:
-            # Extract the mid (open, high, low, close) values from MongoDB document
-            mid = record.get('mid', {})
-            open_price = float(mid.get('o', 0))
-            high_price = float(mid.get('h', 0))
-            low_price = float(mid.get('l', 0))
-            close_price = float(mid.get('c', 0))
-            timestamp = record.get('time')
-            volume = record.get('volume', 0)
+        instrument_id = sqlite_db.get_instrument_id(instrument)
+        if instrument_id is None:
+            logger.error(f"❌ Instrument {instrument} not found in SQLite. Skipping...")
+            return
 
-            # Insert into the historical_data table in SQLite
-            sqlite_db.add_record("historical_data", {
+        if records := [
+            {
                 "instrument_id": instrument_id,
                 "granularity": granularity,
-                "timestamp": timestamp,
-                "price": close_price,  # You can decide which price to store (open, close, etc.)
-                "volume": volume,      # Optional: store volume if needed
-                "open": open_price,
-                "high": high_price,
-                "low": low_price,
-                "close": close_price
-            })
-        logger.info(f"Inserted historical data for {instrument} into SQLite")
+                "timestamp": record.get("time"),
+                "open": float(record.get("mid", {}).get("o", 0)),
+                "high": float(record.get("mid", {}).get("h", 0)),
+                "low": float(record.get("mid", {}).get("l", 0)),
+                "close": float(record.get("mid", {}).get("c", 0)),
+                "volume": record.get("volume", 0),
+            }
+            for record in data
+        ]:
+            sqlite_db.bulk_insert("historical_data", records)
+            logger.info(f"✅ Inserted {len(records)} records for {instrument} into SQLite.")
+
+    def switch_collection(self, collection_name):
+        """
+        Switches to a different collection within the same database.
+        """
+        self.collection = self.db[collection_name]
+        logger.info(f"📂 Switched to collection: {collection_name}")
+
+    def short_bulk_insert(self, documents):
+        """
+        Inserts multiple documents into the current collection while avoiding duplicates.
+        """
+        try:
+            if documents:
+                self.collection.insert_many(documents, ordered=False)
+                logger.info(f"✅ Inserted {len(documents)} documents into {self.collection.name}")
+            else:
+                logger.warning(f"⚠️ No documents to insert into {self.collection.name}")
+        except errors.BulkWriteError as err:
+            logger.error(f"❌ Short Bulk insert failed: {err}")
+            raise
+
+    def read(self, query=None, collection_name=None):
+        """
+        Reads documents from the collection.
+
+        :param query: A dictionary representing the query to match documents.
+        :param collection_name: The name of the collection to read from.
+        :return: A list of matched documents.
+        """
+        if not collection_name:
+            raise ValueError("❌ Collection name must be specified.")
+
+        collection = self.db[collection_name]
+        try:
+            documents = collection.find(query or {})
+            results = list(documents)
+            logger.info(f"📊 Found {len(results)} documents in {collection_name}.")
+            return results
+        except errors.PyMongoError as err:
+            logger.error(f"❌ Failed to read documents from {collection_name}: {err}")
+            raise
+        
+    def fetch_yfinance_data(self, instrument, granularity="1h", days=30):
+        """
+        Fetches recent Forex data from Yahoo Finance and inserts it into MongoDB.
+        """
+        logger.info(f"📥 Fetching {instrument} data from Yahoo Finance ({days} days, {granularity})...")
+
+        # Format instrument for Yahoo Finance
+        yf_symbol = f"{instrument}=X"
+
+        # Define the timeframe
+        end_date = datetime.now(timezone.utc)
+        start_date = end_date - timedelta(days=days)
+
+        # Fetch data from Yahoo Finance
+        try:
+            df = yf.download(yf_symbol, start=start_date.strftime("%Y-%m-%d"), end=end_date.strftime("%Y-%m-%d"), interval=granularity)
+
+            if df.empty:
+                logger.warning(f"⚠️ No data found for {instrument}.")
+                return
+
+            # Convert data to MongoDB format
+            df.reset_index(inplace=True)
+            df.rename(columns={"Datetime": "time", "Open": "open", "High": "high", "Low": "low", "Close": "close", "Volume": "volume"}, inplace=True)
+            df["time"] = df["time"].astype(str)  # Ensure time is stored as string
+
+            # Insert into MongoDB
+            collection_name = f"{instrument.lower()}_{granularity}_data"
+            self.db[collection_name].insert_many(df.to_dict("records"))
+
+            logger.info(f"✅ Inserted {len(df)} records into {collection_name}.")
+
+        except Exception as e:
+            logger.error(f"❌ Error fetching {instrument} from Yahoo Finance: {e}")
+
+    def ensure_latest_data(self, instrument, granularity="1h", days=30):
+        """
+        Ensures the latest data is in MongoDB. If missing, fetches from Yahoo Finance.
+        """
+        collection_name = f"{instrument.lower()}_{granularity}_data"
+
+        if latest_entry := self.db[collection_name].find_one(sort=[("time", -1)]):
+            latest_date = datetime.strptime(latest_entry["time"], "%Y-%m-%d %H:%M:%S")
+            if latest_date >= datetime.now(timezone.utc) - timedelta(days=1):
+                logger.info(f"🔄 {instrument} is up-to-date in MongoDB.")
+                return
+
+        # If missing recent data, fetch from Yahoo Finance
+        self.fetch_yfinance_data(instrument, granularity, days)

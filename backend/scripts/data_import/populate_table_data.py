@@ -1,9 +1,11 @@
+import itertools
 from datetime import datetime, timedelta
 import pandas as pd
 from backend.data.repositories._sqlite_db import SQLiteDB
 from backend.data.repositories.mongo import MongoDBHandler
 from backend.logs.log_manager import LogManager
 
+from datetime import timezone
 # Initialize Logger
 logger = LogManager('populate_sqlite_data').get_logger()
 
@@ -27,27 +29,32 @@ class PopulateTableData:
         logger.info("🔄 Populating sample data into SQLite tables...")
 
         # Initialize all databases
-        self.indicators_db.initialize_db()
-        self.instruments_db.initialize_db()
-        self.sqlite_db.initialize_db()
-        self.optimizer_db.initialize_db()
-        self.config_db.initialize_db()
-        self.user_db.initialize_db()
+        databases = [
+            self.indicators_db, self.instruments_db, self.sqlite_db,
+            self.optimizer_db, self.config_db, self.user_db
+        ]
+        for db in databases:
+            db.initialize_db()
 
         # Insert sample indicators
-        rsi_id = self.indicators_db.add_record("indicators", {"name": "RSI", "type": "momentum"})
-        atr_id = self.indicators_db.add_record("indicators", {"name": "ATR", "type": "volatility"})
-        bb_id = self.indicators_db.add_record("indicators", {"name": "BollingerBands", "type": "volatility"})
-        ma_crossover_id = self.indicators_db.add_record("indicators", {"name": "MACrossover", "type": "trend"})
-
-        # Insert parameters for indicators
+        indicators = [
+            {"name": "RSI", "type": "momentum"},
+            {"name": "ATR", "type": "volatility"},
+            {"name": "BollingerBands", "type": "volatility"},
+            {"name": "MACrossover", "type": "trend"},
+        ]
+        indicator_ids = {
+            ind["name"]: self.indicators_db.add_record("indicators", ind)
+            for ind in indicators
+        }
+        # Insert indicator parameters
         indicator_params = [
-            (rsi_id, "period", "integer", "14"),
-            (atr_id, "period", "integer", "14"),
-            (bb_id, "period", "integer", "20"),
-            (bb_id, "std", "float", "2.0"),
-            (ma_crossover_id, "fast_period", "integer", "12"),
-            (ma_crossover_id, "slow_period", "integer", "26"),
+            (indicator_ids["RSI"], "period", "integer", "14"),
+            (indicator_ids["ATR"], "period", "integer", "14"),
+            (indicator_ids["BollingerBands"], "period", "integer", "20"),
+            (indicator_ids["BollingerBands"], "std", "float", "2.0"),
+            (indicator_ids["MACrossover"], "fast_period", "integer", "12"),
+            (indicator_ids["MACrossover"], "slow_period", "integer", "26"),
         ]
         for param in indicator_params:
             self.indicators_db.add_record("indicator_parameters", {
@@ -58,12 +65,12 @@ class PopulateTableData:
             })
 
         # Insert sample instruments
-        eur_usd_id = self.instruments_db.add_record("instruments", {
-            "name": "EUR_USD", "opening_time": "00:00:00", "closing_time": "23:59:59"
-        })
-        gbp_usd_id = self.instruments_db.add_record("instruments", {
-            "name": "GBP_USD", "opening_time": "00:00:00", "closing_time": "23:59:59"
-        })
+        instruments = [
+            {"name": "EUR_USD", "opening_time": "00:00:00", "closing_time": "23:59:59"},
+            {"name": "GBP_USD", "opening_time": "00:00:00", "closing_time": "23:59:59"},
+        ]
+        for instrument in instruments:
+            self.instruments_db.add_record("instruments", instrument)
 
         logger.info("✅ Sample data population completed.")
 
@@ -80,57 +87,56 @@ class PopulateTableData:
         granularities = ["1h", "1d"]
 
         # Calculate the date range
-        end_date = datetime.utcnow()
+        end_date = datetime.now(timezone.utc)
         start_date = end_date - timedelta(days=days)
 
-        for pair in forex_pairs:
-            for granularity in granularities:
-                collection_name = f"{pair.lower()}_{granularity}_data"
+        for pair, granularity in itertools.product(forex_pairs, granularities):
+            collection_name = f"{pair.lower()}_{granularity}_data"
 
-                # Fetch MongoDB Data (filter last X days)
-                query = {"time": {"$gte": start_date.isoformat()}}
-                mongo_data = self.mongo_handler.read(query, collection_name)
+            # Fetch MongoDB Data (filter last X days)
+            query = {"time": {"$gte": start_date.isoformat()}}
+            mongo_data = self.mongo_handler.read(query, collection_name)
 
-                if not mongo_data:
-                    logger.warning(f"⚠️ No recent data found for {pair} - {granularity}. Skipping...")
-                    continue
+            if not mongo_data:
+                logger.warning(f"⚠️ No recent data found for {pair} - {granularity}. Skipping...")
+                continue
 
-                # Convert MongoDB data to Pandas DataFrame
-                df = pd.DataFrame(mongo_data)
-                df['timestamp'] = pd.to_datetime(df['time'])
-                df.set_index('timestamp', inplace=True)
+            # Convert MongoDB data to Pandas DataFrame
+            df = pd.DataFrame(mongo_data)
+            df['timestamp'] = pd.to_datetime(df['time'])
+            df.set_index('timestamp', inplace=True)
 
-                # Extract fields
-                df['open'] = df['mid'].apply(lambda x: float(x.get('o', 0)))
-                df['high'] = df['mid'].apply(lambda x: float(x.get('h', 0)))
-                df['low'] = df['mid'].apply(lambda x: float(x.get('l', 0)))
-                df['close'] = df['mid'].apply(lambda x: float(x.get('c', 0)))
-                df['volume'] = df.get('volume', 0).astype(float)
+            # Handle missing fields safely
+            df['open'] = df.get('mid', {}).apply(lambda x: float(x.get('o', 0)) if isinstance(x, dict) else 0)
+            df['high'] = df.get('mid', {}).apply(lambda x: float(x.get('h', 0)) if isinstance(x, dict) else 0)
+            df['low'] = df.get('mid', {}).apply(lambda x: float(x.get('l', 0)) if isinstance(x, dict) else 0)
+            df['close'] = df.get('mid', {}).apply(lambda x: float(x.get('c', 0)) if isinstance(x, dict) else 0)
+            df['volume'] = df.get('volume', 0).astype(float)
 
-                # Drop unnecessary columns
-                df.drop(columns=['mid', '_id'], errors='ignore', inplace=True)
+            # Drop unnecessary columns
+            df.drop(columns=['mid', '_id'], errors='ignore', inplace=True)
 
-                # Retrieve Instrument ID from SQLite
-                instrument_id = self.sqlite_db.get_instrument_id(pair)
-                if instrument_id is None:
-                    logger.error(f"❌ Instrument {pair} not found in SQLite. Skipping...")
-                    continue
+            # Retrieve Instrument ID from SQLite
+            instrument_id = self.instruments_db.get_instrument_id(pair)
+            if instrument_id is None:
+                logger.error(f"❌ Instrument {pair} not found in SQLite. Skipping...")
+                continue
 
-                # Insert Data into SQLite
-                for _, row in df.iterrows():
-                    record = {
-                        "instrument_id": instrument_id,
-                        "timestamp": row.name,
-                        "open": row['open'],
-                        "high": row['high'],
-                        "low": row['low'],
-                        "close": row['close'],
-                        "volume": row['volume'],
-                        "granularity": granularity,
-                    }
-                    self.sqlite_db.add_record("historical_data", record)
-
-                logger.info(f"✅ Inserted {len(df)} records for {pair} - {granularity}.")
+            if records := [
+                {
+                    "instrument_id": instrument_id,
+                    "timestamp": row.name,
+                    "open": row['open'],
+                    "high": row['high'],
+                    "low": row['low'],
+                    "close": row['close'],
+                    "volume": row['volume'],
+                    "granularity": granularity,
+                }
+                for _, row in df.iterrows()
+            ]:
+                self.sqlite_db.bulk_insert("historical_data", records)
+                logger.info(f"✅ Inserted {len(records)} records for {pair} - {granularity}.")
 
         logger.info("🎯 Historical data population complete!")
 
