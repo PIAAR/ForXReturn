@@ -1,6 +1,6 @@
 # backend/trading/indicators/williams_r.py
 from logs.log_manager import LogManager
-from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
 from datetime import datetime
 
 # Configure loggers
@@ -9,11 +9,11 @@ logger = LogManager('williams_r_logs').get_logger()
 class WilliamsR:
     def __init__(self, db_name="indicators.db"):
         """
-        Initialize the Williams %R class with a SQLiteDB handler.
+        Initialize the Williams %R class with a SQLiteDBHandler handler.
 
         :parameter db_name: The name of the SQLite database file.
         """
-        self.db_handler = SQLiteDB(db_name=db_name)
+        self.db_handler = SQLiteDBHandler(db_name=db_name)
 
         """
         Calculate the Williams %R for a given DataFrame.

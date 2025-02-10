@@ -1,10 +1,10 @@
 # backend/api/services/trading_services.py
 import threading
 import time
-from logs.log_manager import LogManager
-from trading.brokers.oanda_client import OandaClient
-from trading.managers import manager
-from data.repositories.mongo import MongoDBHandler
+from backend.logs.log_manager import LogManager
+from backend.trading.brokers.oanda_client import OandaClient
+from backend.trading.managers import trade_manager
+from backend.data.repositories._mongo_db import MongoDBHandler
 
 '''
 Handles requests and interacts with services. Contains the core service logic.
@@ -27,7 +27,7 @@ class TradingService:
         """
         Starts the trading process by initializing the trading manager and running the trading logic in a separate thread.
         """
-        manager.initialize()
+        trade_manager.initialize()
         if not self.is_trading:
             self.is_trading = True
             self.trade_thread = threading.Thread(target=self._trading_logic)
@@ -41,7 +41,7 @@ class TradingService:
         """
         Stops the trading process by terminating the trading manager and waiting for the trading thread to finish.
         """
-        manager.terminate()
+        trade_manager.terminate()
         if self.is_trading:
             self.is_trading = False
             if self.trade_thread:
@@ -109,7 +109,7 @@ class TradingService:
         :return: A dictionary indicating whether trading is active or not.
         """
         status = {'status': 'Running'} if self.is_trading else {'status': 'Not Started'}
-        if manager.is_running():
+        if trade_manager.is_running():
             self.logger.info("Trading manager is running.")
         else:
             self.logger.warning("Trading manager is not running.")

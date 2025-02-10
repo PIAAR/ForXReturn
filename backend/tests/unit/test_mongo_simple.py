@@ -1,6 +1,6 @@
 import os
 from pymongo import MongoClient, errors
-from backend.data.repositories.mongo import MongoDBHandler
+from backend.data.repositories._mongo_db import MongoDBHandler
 from backend.trading.brokers.oanda_client import OandaClient
 from backend.logs.log_manager import LogManager
 from backend.config.secrets import defs  # Ensure this exists

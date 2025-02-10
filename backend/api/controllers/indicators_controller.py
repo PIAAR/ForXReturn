@@ -1,6 +1,6 @@
 import os
 import importlib
-from data.repositories._sqlite_db import SQLiteDB
+from data.repositories._sqlite_db import SQLiteDBHandler
 from datetime import datetime
 from data.repositories.mongo import MongoDBHandler
 from logs.log_manager import LogManager
@@ -13,7 +13,7 @@ logger = LogManager('indicator_controller').get_logger()
 
 class IndicatorsController:
     def __init__(self, db_path='backend/data/repositories/databases/indicators.db', autostart=False):
-        self.db = SQLiteDB(db_path)
+        self.db = SQLiteDBHandler(db_path)
         self.autostart = autostart
         self.indicators_dir = os.path.join(os.path.dirname(__file__), '../../trading/indicators/')
         

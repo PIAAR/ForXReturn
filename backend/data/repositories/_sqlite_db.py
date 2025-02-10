@@ -6,10 +6,10 @@ from backend.logs.log_manager import LogManager  # Import the LogManager class
 # Configure logging
 logger = LogManager('sqlite_db_logs').get_logger()
 
-class SQLiteDB:
+class SQLiteDBHandler:
     def __init__(self, db_name):
         """
-        Initializes the SQLiteDB class with the specified database.
+        Initializes the SQLiteDBHandler class with the specified database.
         :parameter db_name: The name of the database (e.g., indicators.db, configuration.db).
         """
         base_dir = os.path.dirname(os.path.abspath(__file__))

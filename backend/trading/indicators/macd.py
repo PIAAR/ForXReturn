@@ -1,6 +1,6 @@
 # backend/trading/indicators/macd.py
 from logs.log_manager import LogManager
-from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
 from datetime import datetime
         
 logger = LogManager('macd_logs').get_logger()
@@ -8,11 +8,11 @@ logger = LogManager('macd_logs').get_logger()
 class MACD:
     def __init__(self, db_name="indicators.db"):
         """
-        Initialize the MACD class with a SQLiteDB handler.
+        Initialize the MACD class with a SQLiteDBHandler handler.
         
         :parameter db_name: The name of the SQLite database file.
         """
-        self.db_handler = SQLiteDB(db_name=db_name)
+        self.db_handler = SQLiteDBHandler(db_name=db_name)
 
     @staticmethod
     def calculate(df, short_period=12, long_period=26, signal_period=9):

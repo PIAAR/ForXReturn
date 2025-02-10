@@ -4,7 +4,7 @@ import time
 import json
 
 import schedule
-from backend.data.repositories.mongo import MongoDBHandler
+from backend.data.repositories._mongo_db import MongoDBHandler
 from backend.logs.log_manager import LogManager
 from backend.trading.brokers.oanda_client import OandaClient
 

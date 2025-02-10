@@ -1,6 +1,6 @@
 import os
 import yaml
-from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
 from backend.logs.log_manager import LogManager
 
 # Initialize Logger
@@ -12,7 +12,7 @@ class PopulateInstrumentData:
         """
         Initializes the database connection and loads instruments from the YAML file.
         """
-        self.db = SQLiteDB(db_name)
+        self.db = SQLiteDBHandler(db_name)
         self.db.initialize_db()
 
         # Determine YAML file path

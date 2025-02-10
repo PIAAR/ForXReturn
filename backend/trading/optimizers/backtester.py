@@ -3,8 +3,8 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 
-from backend.data.repositories._sqlite_db import SQLiteDB
-from backend.data.repositories.mongo import MongoDBHandler
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
+from backend.data.repositories._mongo_db import MongoDBHandler
 from backend.logs.log_manager import LogManager
 from backend.trading.indicators.sma import SMA
 
@@ -21,7 +21,7 @@ class Backtester:
         
         # Initialize MongoDB and SQLite handlers
         self.mongo_handler = MongoDBHandler(db_name="forex_data")
-        self.db_handler = SQLiteDB(db_name="instruments.db") 
+        self.db_handler = SQLiteDBHandler(db_name="instruments.db") 
         
     def load_data(self, instrument, granularity="D", source="mongo"):
         """

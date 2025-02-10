@@ -1,12 +1,12 @@
 from datetime import datetime
-from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
 from backend.api.services.state_machine import StateMachine
 from config.indicator_config_loader import IndicatorConfigLoader
 
 def evaluate_and_store_states():
     # Initialize database connections
-    instruments_db = SQLiteDB("instruments.db")
-    state_machine_db = SQLiteDB("instrument_states.db")
+    instruments_db = SQLiteDBHandler("instruments.db")
+    state_machine_db = SQLiteDBHandler("instrument_states.db")
 
     # Fetch all instruments
     instruments = instruments_db.fetch_records("instruments")

@@ -3,15 +3,15 @@ import os
 from unittest.mock import patch
 from backend.api.services.state_machine import StateMachine
 from backend.config.indicator_config_loader import IndicatorConfigLoader
-from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
 
 class TestStateMachine(unittest.TestCase):
     def setUp(self):
         # Determine the correct path for the YAML file
         base_path = os.path.dirname(__file__)  # Current directory of the test file
         yaml_path = os.path.join(base_path, '../../scripts/yml/indicator_parameters.yml')
-        # Initialize SQLiteDB connection
-        self.db_connection = SQLiteDB(db_name="instruments.db")  # Use your actual database name
+        # Initialize SQLiteDBHandler connection
+        self.db_connection = SQLiteDBHandler(db_name="instruments.db")  # Use your actual database name
 
         # Load the YAML configuration file or mock it if not present
         if os.path.exists(yaml_path):
@@ -27,8 +27,8 @@ class TestStateMachine(unittest.TestCase):
         # Initialize the state machine with the config loader
         self.state_machine = StateMachine(self.config_loader, self.db_connection)
 
-    @patch('backend.data.repositories._sqlite_db.SQLiteDB.fetch_records')
-    @patch('backend.data.repositories._sqlite_db.SQLiteDB.execute_script')
+    @patch('backend.data.repositories._sqlite_db.SQLiteDBHandler.fetch_records')
+    @patch('backend.data.repositories._sqlite_db.SQLiteDBHandler.execute_script')
     def test_state_machine(self, mock_execute_script, mock_fetch_records):
         # Set up the mock for fetch_records to return a state when queried
         mock_fetch_records.return_value = [{'state': 'Red'}]

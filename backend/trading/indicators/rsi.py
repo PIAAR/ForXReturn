@@ -1,6 +1,6 @@
 import numpy as np
 from logs.log_manager import LogManager
-from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
 from datetime import datetime
 
 # Configure loggers
@@ -9,11 +9,11 @@ logger = LogManager('rsi_logs').get_logger()
 class RSI:
     def __init__(self, db_name="indicators.db"):
         """
-        Initialize the RSI class with a SQLiteDB handler.
+        Initialize the RSI class with a SQLiteDBHandler handler.
 
         :parameter db_name: The name of the SQLite database file.
         """
-        self.db_handler = SQLiteDB(db_name=db_name)
+        self.db_handler = SQLiteDBHandler(db_name=db_name)
 
     @staticmethod
     def calculate(df, period=14):

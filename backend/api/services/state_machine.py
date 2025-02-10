@@ -1,5 +1,5 @@
 from datetime import datetime
-from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
 from logs.log_manager import LogManager
 
 # Configure the logger

@@ -2,7 +2,7 @@
 import unittest
 from unittest.mock import patch, MagicMock
 from pymongo import errors
-from backend.data.repositories.mongo import MongoDBHandler
+from backend.data.repositories._mongo_db import MongoDBHandler
 from bson import ObjectId
 
 class TestMongoDBHandler(unittest.TestCase):

@@ -2,7 +2,7 @@ import os
 import requests
 import yfinance as yf
 from datetime import datetime
-from backend.data.repositories.mongo import MongoDBHandler
+from backend.data.repositories._mongo_db import MongoDBHandler
 from backend.logs.log_manager import LogManager
 
 class ForexDataFetcher:

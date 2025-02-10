@@ -2,7 +2,7 @@
 import pandas as pd
 import numpy as np
 from logs.log_manager import LogManager
-from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
 from datetime import datetime
 
 # Configure loggers
@@ -12,11 +12,11 @@ logger = LogManager("adx_logs").get_logger()
 class ADX:
     def __init__(self, db_name="indicators.db"):
         """
-        Initialize the ADX class with a SQLiteDB handler.
+        Initialize the ADX class with a SQLiteDBHandler handler.
 
         :parameter db_name: The name of the SQLite database file.
         """
-        self.db_handler = SQLiteDB(db_name=db_name)
+        self.db_handler = SQLiteDBHandler(db_name=db_name)
 
     import pandas as pd
 import numpy as np

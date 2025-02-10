@@ -1,6 +1,6 @@
 from datetime import datetime
 from backend.logs.log_manager import LogManager
-from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
 from backend.trading.optimizers.backtester import Backtester
 from backend.trading.indicators.sma import SMA
 from backend.trading.indicators.ema import EMA
@@ -12,10 +12,10 @@ logger = LogManager('optimizer_logs').get_logger()
 class Optimizer:
     def __init__(self, backtester):
         """
-        Initialize the optimizer with a backtester and SQLiteDB handler.
+        Initialize the optimizer with a backtester and SQLiteDBHandler handler.
         """
         self.backtester = backtester
-        self.db_handler = SQLiteDB(db_name="optimizer.db")
+        self.db_handler = SQLiteDBHandler(db_name="optimizer.db")
         logger.info("Optimizer initialized.")
 
     def optimize_parameters(self, instrument, indicator_func, param_combinations):

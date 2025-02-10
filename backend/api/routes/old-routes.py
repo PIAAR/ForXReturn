@@ -6,7 +6,7 @@ from backend.api.services.data_population_service import DataPopulationService
 from backend.api.services.state_machine import StateMachine
 from backend.api.services.trading_services import TradingService
 from backend.config.indicator_config_loader import IndicatorConfigLoader
-from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
 from flask import Blueprint, Flask, jsonify, request
 from backend.logs.log_manager import LogManager
 
@@ -23,8 +23,8 @@ trading_bp = Blueprint('trading', __name__)
 data_population_bp = Blueprint('data_population', __name__)
 
 # Create a database connection for indicators.db
-indicator_db_connection = SQLiteDB("indicators.db")._connect_db()
-instrument_db_connection = SQLiteDB("instruments.db")._connect_db()
+indicator_db_connection = SQLiteDBHandler("indicators.db")._connect_db()
+instrument_db_connection = SQLiteDBHandler("instruments.db")._connect_db()
 
 # Initialize services with db connections
 trading_service = TradingService(indicator_db_connection)
@@ -44,11 +44,11 @@ def main_route():
     return jsonify({'message': 'Welcome to the trading API!'}), 200
 
 from flask import jsonify
-from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
 
 @main.route("/system-status", methods=['GET'])
 def system_status():
-    instruments_db = SQLiteDB("instruments.db")  # Now using instruments.db
+    instruments_db = SQLiteDBHandler("instruments.db")  # Now using instruments.db
 
     # Fetch all instruments
     instruments = instruments_db.fetch_records("instruments")
@@ -156,7 +156,7 @@ def performance():
     """
     
     # Create a database connection
-    indicator_db_connection = SQLiteDB("indicators.db")._connect_db()
+    indicator_db_connection = SQLiteDBHandler("indicators.db")._connect_db()
     # Initialize TradingService with indicator_db_connection
     trading_service = TradingService(indicator_db_connection)
 

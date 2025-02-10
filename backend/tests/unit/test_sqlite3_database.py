@@ -1,5 +1,5 @@
 import unittest
-from backend.data.repositories._sqlite_db import SQLiteDB
+from backend.data.repositories._sqlite_db import SQLiteDBHandler
 from backend.logs.log_manager import LogManager
 
 # Configure logging
@@ -12,7 +12,7 @@ class TestSQLiteDatabase(unittest.TestCase):
     def setUpClass(cls):
         """Set up the test class with an in-memory database."""
         logger.info("Setting up the in-memory database for testing.")
-        cls.db = SQLiteDB(':memory:')  # Use in-memory database for testing
+        cls.db = SQLiteDBHandler(':memory:')  # Use in-memory database for testing
 
         # Schema SQL for testing
         schema_sql = """

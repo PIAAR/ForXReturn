@@ -2,7 +2,7 @@
 import os
 import sys
 from backend.logs.log_manager import LogManager  # Import the LogManager class
-from backend.data.repositories._sqlite_db import SQLiteDB  # Use the existing SQLiteDB class
+from backend.data.repositories._sqlite_db import SQLiteDBHandler  # Use the existing SQLiteDBHandler class
 
 # Import newly refactored population classes
 from backend.scripts.data_import.populate_table_data import PopulateTableData
@@ -31,10 +31,10 @@ class PopulateSQLTables:
 
     def initialize_db(self, db_name):
         """
-        Initialize the database using the existing SQLiteDB class.
+        Initialize the database using the existing SQLiteDBHandler class.
         """
         try:
-            db = SQLiteDB(db_name)
+            db = SQLiteDBHandler(db_name)
             db.initialize_db()
             logger.info(f"✅ Database '{db_name}' initialized successfully.")
         except Exception as e:
@@ -51,7 +51,7 @@ class PopulateSQLTables:
             # Populate tables, instruments, and indicators
             PopulateInstrumentData().run()
             PopulateIndicatorData().run()
-            PopulateTableData().run_all()
+            PopulateTableData().run()
 
             logger.info("✅ Data population completed successfully.")
         except Exception as e:
