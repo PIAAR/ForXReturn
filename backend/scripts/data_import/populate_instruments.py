@@ -60,11 +60,9 @@ class PopulateInstrumentData:
 
         for instrument in self.instruments:
             try:
-                existing_record = self.db.fetch_records(
+                if existing_record := self.db.fetch_records(
                     "instruments", {"name": instrument['name']}
-                )
-
-                if existing_record:
+                ):
                     # Extract existing data
                     existing_opening_time, existing_closing_time = existing_record[0][2:4]
 

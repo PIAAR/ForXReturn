@@ -5,6 +5,7 @@ from backend.api.services.state_machine import StateMachine
 from backend.api.services.trading_services import TradingService
 from backend.config.indicator_config_loader import IndicatorConfigLoader
 from backend.data.repositories._sqlite_db import SQLiteDBHandler
+from backend.data.repositories._mongo_db import MongoDBHandler
 from flask import Blueprint, Flask, jsonify, request
 from backend.logs.log_manager import LogManager
 
@@ -45,14 +46,23 @@ def main_route():
 @main.route("/system-status", methods=['GET'])
 def system_status():
     """
-    Fetches the system status, including states for all instruments.
+    Fetches the system status, including:
+    - Instrument states from SQLite
+    - Data freshness check for MongoDB (backtest data)
+    - Data freshness check for SQLite (active trades)
+    - Alerts for missing or out-of-sync data
     """
     logger.info("Fetching system status.")
     try:
         instruments_db = SQLiteDBHandler("instruments.db")
+        mongo_handler = MongoDBHandler(db_name="forex_data")
+        sqlite_db = SQLiteDBHandler("historical_data.db")
+
         instruments = instruments_db.fetch_records("instruments")
 
         response_data = []
+        alerts = []  # Stores missing or outdated data issues
+
         for instrument in instruments:
             instrument_id = instrument[0]
             instrument_name = instrument[1]
@@ -63,18 +73,52 @@ def system_status():
                 'minute': get_state(instrument_id, 'minute', instruments_db),
             }
 
+            # Step 1: Check MongoDB Data Health
+            mongo_collection = f"{instrument_name.lower()}_D_data"
+            if mongo_latest_record := mongo_handler.read(
+                {}, collection_name=mongo_collection
+            ):
+                latest_mongo_time = max(record["time"] for record in mongo_latest_record)
+                latest_mongo_dt = datetime.strptime(latest_mongo_time, "%Y-%m-%d %H:%M:%S")
+            else:
+                latest_mongo_dt = None
+
+            # Step 2: Check SQLite Data Health
+            sqlite_latest_time = sqlite_db.fetch_records_with_query(
+                "SELECT MAX(timestamp) FROM historical_data WHERE instrument_id = ? AND granularity = ?",
+                (instrument_id, "D")
+            )
+            latest_sqlite_dt = sqlite_latest_time[0][0] if sqlite_latest_time and sqlite_latest_time[0][0] else None
+
+            # Step 3: Determine if data is missing or out-of-sync
+            now = datetime.now()
+
+            if not latest_mongo_dt:
+                alerts.append(f"⚠️ No data in MongoDB for {instrument_name} (Daily)")
+            elif (now - latest_mongo_dt).days > 1:
+                alerts.append(f"⚠️ MongoDB data outdated for {instrument_name} (Last updated: {latest_mongo_dt})")
+
+            if not latest_sqlite_dt:
+                alerts.append(f"⚠️ No data in SQLite for {instrument_name} (Daily)")
+            elif (now - datetime.strptime(latest_sqlite_dt, "%Y-%m-%d %H:%M:%S")).days > 1:
+                alerts.append(f"⚠️ SQLite data outdated for {instrument_name} (Last updated: {latest_sqlite_dt})")
+
             response_data.append({
                 'instrument_id': instrument_id,
                 'instrument_name': instrument_name,
                 'state': states,
-                'timestamp': datetime.now().isoformat()
+                'mongo_last_update': latest_mongo_dt.strftime("%Y-%m-%d %H:%M:%S") if latest_mongo_dt else "Missing",
+                'sqlite_last_update': latest_sqlite_dt or "Missing",
+                'timestamp': now.isoformat()
             })
 
         logger.info("System status fetched successfully.")
-        return jsonify(response_data), 200
+        return jsonify({'status': response_data, 'alerts': alerts}), 200
+
     except Exception as e:
         logger.error(f"Error fetching system status: {e}")
         return jsonify({'error': str(e)}), 500
+
 
 def get_state(instrument_id, timeframe, db):
     """

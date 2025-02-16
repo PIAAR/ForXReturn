@@ -3,7 +3,7 @@ import threading
 import time
 from backend.logs.log_manager import LogManager
 from backend.trading.brokers.oanda_client import OandaClient
-from backend.trading.managers import trade_manager
+from backend.trading.managers.trade_manager import TradeManager
 from backend.data.repositories._mongo_db import MongoDBHandler
 
 '''
@@ -19,6 +19,7 @@ class TradingService:
         self.conn = db_connection
         self.is_trading = False
         self.trade_thread = None
+        self.trade_manager = TradeManager()
         self.mongo_handler = MongoDBHandler(db_name="trading_db", collection_name="trades")
         self.oanda_client = OandaClient()
         self.logger = LogManager('trading_service').get_logger()
@@ -27,9 +28,9 @@ class TradingService:
         """
         Starts the trading process by initializing the trading manager and running the trading logic in a separate thread.
         """
-        trade_manager.initialize()
         if not self.is_trading:
             self.is_trading = True
+            self.trade_manager.initialize()
             self.trade_thread = threading.Thread(target=self._trading_logic)
             self.trade_thread.start()
             self.logger.info("Trading process started.")
@@ -41,9 +42,9 @@ class TradingService:
         """
         Stops the trading process by terminating the trading manager and waiting for the trading thread to finish.
         """
-        trade_manager.terminate()
         if self.is_trading:
             self.is_trading = False
+            self.trade_manager.terminate()
             if self.trade_thread:
                 self.trade_thread.join()  # Wait for the trading thread to finish
             self.logger.info("Trading process stopped.")
@@ -98,7 +99,7 @@ class TradingService:
 
         :return: A list of current positions.
         """
-        positions = self.oanda_client.get_positions()
+        positions = self.oanda_client.get_open_positions()
         self.logger.info(f"Retrieved current positions: {positions}")
         return positions
 
@@ -109,7 +110,7 @@ class TradingService:
         :return: A dictionary indicating whether trading is active or not.
         """
         status = {'status': 'Running'} if self.is_trading else {'status': 'Not Started'}
-        if trade_manager.is_running():
+        if TradeManager.is_running():
             self.logger.info("Trading manager is running.")
         else:
             self.logger.warning("Trading manager is not running.")

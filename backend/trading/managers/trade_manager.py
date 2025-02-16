@@ -1,58 +1,67 @@
 from backend.trading.strategies import strategy
 from backend.trading.optimizers import optimizer
+from backend.trading.brokers.oanda_client import OandaClient
 
 class TradeManager:
     """
     Manages trading activities, including initialization, termination, and status tracking.
     """
+    is_trading_active = False 
 
-    def __init__(self):
-        """
-        Initializes the TradeManager instance.
-        """
-        self.is_trading_active = False
-
-    def initialize(self):
+    @classmethod
+    def initialize(cls):
         """
         Initializes the trading manager by setting up strategies and optimizers.
         """
-        if not self.is_trading_active:
+        if not cls.is_trading_active:
             strategy.setup_strategy()  # Setup trading strategy
             optimizer.setup_optimizer()  # Setup trading optimizer
-            self.is_trading_active = True
+            cls.is_trading_active = True
             print("✅ Trading manager initialized.")
 
-    def terminate(self):
+    @classmethod
+    def terminate(cls):
         """
         Terminates the trading manager and cleans up resources.
         """
-        if self.is_trading_active:
+        if cls.is_trading_active:
             strategy.teardown_strategy()  # Teardown trading strategy
             optimizer.teardown_optimizer()  # Teardown trading optimizer
-            self.is_trading_active = False
+            cls.is_trading_active = False
             print("❌ Trading manager terminated.")
 
-    def is_running(self):
+    @classmethod
+    def is_running(cls):
         """
         Checks if the trading manager is currently running.
 
         :return: True if trading is active, False otherwise.
         """
-        return self.is_trading_active
+        return cls.is_trading_active
 
+    @classmethod
+    def place_trade(cls, instrument, units, stop_loss=None, take_profit=None):
+        """
+        Places a market trade via OANDA.
+        """
+        if not cls.is_trading_active:
+            print("❌ TradeManager is not running. Start trading first.")
+            return None
 
+        oanda = OandaClient()
+        return oanda.place_market_order(instrument, units, stop_loss, take_profit)
+    
 # Example usage
 if __name__ == "__main__":
-    trade_manager = TradeManager()
     
     # Initialize trading
-    trade_manager.initialize()
+    TradeManager.initialize()
     
     # Check status
-    print("Trading Active:", trade_manager.is_running())
+    print("Trading Active:", TradeManager.is_running())
 
     # Terminate trading
-    trade_manager.terminate()
+    TradeManager.terminate()
 
     # Check status again
-    print("Trading Active:", trade_manager.is_running())
+    print("Trading Active:", TradeManager.is_running())
