@@ -8,6 +8,8 @@ from backend.api.controllers.forex_data_controller import ForexDataFetcher
 from backend.api.routes.routes import create_app
 from backend.data.repositories._sqlite_db import SQLiteDBHandler
 from backend.scripts.setup.setup_database import PopulateSQLTables
+from backend.scripts.data_import.populate_instruments import PopulateInstrumentData
+from backend.scripts.data_import.populate_indicators import PopulateIndicatorData
 from backend.scripts.data_import.populate_table_data import PopulateTableData
 
 # Configure logging
@@ -89,11 +91,15 @@ def run_data_ingestion():
     This ensures the SQLite database is populated with the latest 1-year data from OANDA.
     """
     try:
+        logger.info("Starting to populate the indicator database...")
+        print("Starting to populate the indicator database...")
+        PopulateIndicatorData()
+        logger.info("Starting to populate the instrument database...")
+        print("Starting to populate the instrument database...")
+        PopulateInstrumentData()
         logger.info("🔄 Running data ingestion process...")
         print("🔄 Running data ingestion process...")
-
-        populator = PopulateTableData()
-        populator.populate_historical_data_to_sqlite(years=1)  # Fetch the last 1 year of data
+        PopulateTableData()
 
         logger.info("✅ Data ingestion completed successfully.")
         print("✅ Data ingestion completed successfully.")
@@ -101,12 +107,13 @@ def run_data_ingestion():
         logger.error(f"❌ Error during data ingestion: {e}")
         print(f"❌ Error during data ingestion: {e}")
 
+
+# # Step 1: Run database setup before starting the app
+run_database_setup()
+
 # Step 1: Run historical data ingestion before starting the Flask app
 data_thread = threading.Thread(target=run_data_ingestion, daemon=True)
 data_thread.start()
-
-# # Step 1: Run database setup before starting the app
-# run_database_setup()
 
 # # Step 2: Start Forex Data Fetcher in a separate thread
 # fetcher_thread = threading.Thread(target=run_fetcher_on_startup, daemon=True)

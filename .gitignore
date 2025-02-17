@@ -8,3 +8,5 @@
 backend/config/settings/config.json
 *.pyc
 *.pyc
+backend/tests/test_p2p_scratch_0.py
+backend/tests/test_p2p_scratch_1.py

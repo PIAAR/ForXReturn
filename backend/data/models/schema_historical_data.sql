@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS historical_data (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     instrument_id INTEGER NOT NULL,  -- Foreign key to instruments
+    instrument TEXT NOT NULL, -- Instrument information
     granularity TEXT NOT NULL,
     timestamp TEXT NOT NULL,
     open REAL,        -- Open price

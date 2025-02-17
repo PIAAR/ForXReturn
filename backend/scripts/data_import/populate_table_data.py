@@ -16,8 +16,8 @@ class PopulateTableData:
         Initialize database connections for SQLite and MongoDB.
         """
         self.mongo_handler = MongoDBHandler(db_name="forex_data")
-        self.sqlite_db = SQLiteDBHandler(db_name="historical_data.db")
         self.oanda_client = OandaClient()  # OANDA Client for fetching forex data
+        self.historical_data_db = SQLiteDBHandler("historical_data.db")
         self.indicators_db = SQLiteDBHandler("indicators.db")
         self.instruments_db = SQLiteDBHandler("instruments.db")
         self.optimizer_db = SQLiteDBHandler("optimizer.db")
@@ -47,12 +47,19 @@ class PopulateTableData:
         :param granularity: The timeframe (e.g., "D", "H1").
         :return: Latest timestamp or None if no data exists.
         """
+        # Ensure table exists
+        self.historical_data_db.ensure_historical_data_table()
+    
         query = """
             SELECT MAX(timestamp) FROM historical_data 
             WHERE instrument_id = ? AND granularity = ?
         """
-        instrument_id = self.sqlite_db.get_instrument_id(instrument)
-        result = self.sqlite_db.fetch_records_with_query(query, (instrument_id, granularity))
+        instrument_id = self.instruments_db.get_instrument_id(instrument)
+        if instrument_id is None:
+            logger.error(f"❌ Instrument {instrument} not found in `instruments.db`.")
+            return datetime.now(timezone.utc) - timedelta(days=365)
+        
+        result = self.instruments_db.fetch_records_with_query(query, (instrument_id, granularity))
 
         if result and result[0][0]:
             return datetime.strptime(result[0][0], "%Y-%m-%d %H:%M:%S")  # Convert string to datetime
@@ -68,7 +75,7 @@ class PopulateTableData:
 
         # Initialize all databases
         databases = [
-            self.indicators_db, self.instruments_db, self.sqlite_db,
+            self.indicators_db, self.instruments_db, self.historical_data_db,
             self.optimizer_db, self.config_db, self.user_db
         ]
         for db in databases:
@@ -203,14 +210,10 @@ class PopulateTableData:
 
     def populate_historical_data_to_sqlite(self, years=1):
         """
-        Populates SQLite with M1 & M5 data for instruments currently in position.
-        - Fetches missing data from MongoDB.
-        - Updates with real-time data from OANDA.
+        Populates SQLite with M1 & M5 data for active positions.
         """
-
         logger.info("🔄 Populating SQLite with active trading data (M1, M5)...")
 
-        # Step 1: Get active positions from OANDA API
         active_positions = self.oanda_client.get_open_positions()
         if not active_positions or "positions" not in active_positions:
             logger.warning("⚠️ No active positions found. Skipping SQLite update.")
@@ -223,51 +226,73 @@ class PopulateTableData:
             for granularity in ["M1", "M5"]:
                 logger.info(f"📥 Fetching {pair} data ({granularity})...")
 
-                # Step 2: Get latest timestamp from SQLite
+                # ✅ Step 1: Get Instrument ID
+                instrument_id = self.instruments_db.get_instrument_id(pair)
+
+                if instrument_id is None:
+                    logger.warning(f"⚠️ Instrument {pair} is missing in SQLite. Adding it now...")
+                    self.instruments_db.add_record("instruments", {
+                        "name": pair,
+                        "opening_time": "00:00:00",
+                        "closing_time": "23:59:59"
+                    })
+                    instrument_id = self.instruments_db.get_instrument_id(pair)  # Re-fetch
+
+                if instrument_id is None:
+                    logger.error(f"❌ Failed to retrieve instrument_id for {pair}. Skipping insertion!")
+                    continue
+
+                logger.info(f"✅ Retrieved instrument_id {instrument_id} for {pair}")
+
+                # ✅ Step 2: Get latest timestamp
                 latest_timestamp = self.get_latest_timestamp(pair, granularity)
 
-                # Step 3: Backfill missing data from MongoDB
+                # ✅ Step 3: Fetch data from MongoDB
                 collection_name = f"{pair.lower()}_{granularity}_data"
                 query = {"time": {"$gt": latest_timestamp.strftime("%Y-%m-%d %H:%M:%S")}}
-                if mongo_data := self.mongo_handler.read(query, collection_name):
-                    df = pd.DataFrame(mongo_data)
-                    df["timestamp"] = pd.to_datetime(df["time"])
-                    df.set_index("timestamp", inplace=True)
+                mongo_data = self.mongo_handler.read(query, collection_name)
 
-                    # Extract OHLCV
-                    df["open"] = df["mid"].apply(lambda x: float(x.get("o", 0)))
-                    df["high"] = df["mid"].apply(lambda x: float(x.get("h", 0)))
-                    df["low"] = df["mid"].apply(lambda x: float(x.get("l", 0)))
-                    df["close"] = df["mid"].apply(lambda x: float(x.get("c", 0)))
-                    df["volume"] = df.get("volume", 0).astype(float)
+                if not mongo_data:
+                    logger.warning(f"⚠️ No data found in MongoDB for {pair} - {granularity}.")
+                    continue
 
-                    # Drop unnecessary columns
-                    df.drop(columns=["mid", "_id", "time"], errors="ignore", inplace=True)
+                df = pd.DataFrame(mongo_data)
+                df["timestamp"] = pd.to_datetime(df["time"]).dt.strftime("%Y-%m-%d %H:%M:%S")
 
-                    # Insert MongoDB data into SQLite
-                    self.sqlite_db.bulk_insert("historical_data", df.to_dict(orient="records"))
-                    logger.info(f"✅ Backfilled {len(df)} records from MongoDB for {pair} - {granularity}.")
+                df["open"] = df["mid"].apply(lambda x: float(x.get("o", 0)))
+                df["high"] = df["mid"].apply(lambda x: float(x.get("h", 0)))
+                df["low"] = df["mid"].apply(lambda x: float(x.get("l", 0)))
+                df["close"] = df["mid"].apply(lambda x: float(x.get("c", 0)))
+                df["volume"] = df.get("volume", 0).astype(float)
 
-                if oanda_data := self.oanda_client.fetch_historical_data(
-                    instrument=pair, granularity=granularity, count=10
-                ):
-                    df = pd.DataFrame(oanda_data)
-                    df["timestamp"] = pd.to_datetime(df["time"])
-                    df.set_index("timestamp", inplace=True)
+                df.drop(columns=["mid", "_id", "time"], errors="ignore", inplace=True)
 
-                    df["open"] = df["mid"].apply(lambda x: float(x.get("o", 0)))
-                    df["high"] = df["mid"].apply(lambda x: float(x.get("h", 0)))
-                    df["low"] = df["mid"].apply(lambda x: float(x.get("l", 0)))
-                    df["close"] = df["mid"].apply(lambda x: float(x.get("c", 0)))
-                    df["volume"] = df.get("volume", 0).astype(float)
+                # ✅ Step 4: Transform data for SQLite insertion
+                records = [
+                    {
+                        "instrument_id": instrument_id,
+                        "timestamp": row["timestamp"],
+                        "open": row["open"],
+                        "high": row["high"],
+                        "low": row["low"],
+                        "close": row["close"],
+                        "volume": row["volume"],
+                        "granularity": granularity,
+                    }
+                    for _, row in df.iterrows()
+                ]
 
-                    df.drop(columns=["mid", "_id", "time"], errors="ignore", inplace=True)
+                if any(record["instrument_id"] is None for record in records):
+                    logger.error(f"❌ Some records have missing instrument_id for {pair} - {granularity}. Skipping insert!")
+                    continue
 
-                    # Insert OANDA real-time data into SQLite
-                    self.sqlite_db.bulk_insert("historical_data", df.to_dict(orient="records"))
-                    logger.info(f"✅ Updated {len(df)} records from OANDA for {pair} - {granularity}.")
+                # ✅ Step 5: Insert into SQLite
+                try:
+                    self.historical_data_db.bulk_insert("historical_data", records)
+                    logger.info(f"✅ Inserted {len(records)} records for {pair} - {granularity} in SQLite.")
+                except Exception as e:
+                    logger.error(f"❌ Error inserting records for {pair} - {granularity}: {e}")
 
-        logger.info("🎯 SQLite population complete.")
 
     def run(self):
         """
@@ -275,7 +300,7 @@ class PopulateTableData:
         """
         # self.populate_sample_data()
         self.populate_historical_data_to_mongo()
-        # self.populate_historical_data_to_sqlite()
+        self.populate_historical_data_to_sqlite()
 
 
 # Run when script is executed

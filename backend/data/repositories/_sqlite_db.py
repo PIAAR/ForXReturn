@@ -87,12 +87,17 @@ class SQLiteDBHandler:
         try:
             self._connect_db()
             cursor = self.conn.cursor()
+            
+            logger.debug(f"🔍 Searching for instrument '{instrument_name}' in {self.db_path}")
+            print(f"🔍 Searching for instrument '{instrument_name}' in {self.db_path}")
 
             query = "SELECT id FROM instruments WHERE name = ?"
             cursor.execute(query, (instrument_name,))
             print(f'This is the instrument name {instrument_name}')
             
-            if result := cursor.fetchone():
+            result = cursor.fetchone()
+
+            if result:
                 logger.info(f"✅ Instrument '{instrument_name}' found with ID: {result[0]}")
                 return result[0]
             else:
@@ -279,6 +284,37 @@ class SQLiteDBHandler:
 
         logger.info(f"Record added to {table_name}")
         return cursor.lastrowid
+
+    def bulk_insert(self, table_name, records):
+        """
+        Inserts multiple records into the specified table in bulk.
+
+        :param table_name: The name of the table to insert records into.
+        :param records: A list of dictionaries representing rows to be inserted.
+        """
+        if not records:
+            logger.warning(f"⚠️ No records to insert into {table_name}.")
+            return
+
+        try:
+            self._connect_db()
+            cursor = self.conn.cursor()
+
+            # Extract column names from the first record
+            columns = ', '.join(records[0].keys())
+            placeholders = ', '.join('?' * len(records[0]))
+
+            query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
+            values = [tuple(record.values()) for record in records]
+
+            cursor.executemany(query, values)  # Execute bulk insert
+            self.conn.commit()
+
+            logger.info(f"✅ Inserted {len(records)} records into {table_name}.")
+        except Exception as e:
+            logger.error(f"❌ Error during bulk insert into {table_name}: {e}")
+        finally:
+            self.close_connection()
 
     def add_optimized_parameters(self, instrument_id, indicator_id, parameters):
         try:
